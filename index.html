@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Finest Aquatics Staff Hub V9</title>
+  <meta name="theme-color" content="#ff5a00" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <style>
+    :root{--bg:#000;--panel:#101010;--panel2:#171717;--line:#2b2b2b;--txt:#fff;--muted:#aaa;--orange:#ff5a00;--orange2:#ff7a1a;--green:#39d66f;--red:#ff4d35;--yellow:#ffc247}
+    *{box-sizing:border-box}
+    body{margin:0;background:#000;color:#fff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+    body:before{content:"";position:fixed;inset:0;background:url("assets/finest-main-bg.png") center/cover no-repeat;opacity:.08;pointer-events:none}
+    #app{position:relative;max-width:760px;margin:0 auto;padding:18px 16px 36px}
+    .screen{display:none}.screen.active{display:block}
+    .hidden{display:none!important}
+    img{max-width:100%}
+    .brand-logo{width:100%;max-width:420px;display:block;margin:0 auto 20px}
+    .top-logo{height:42px;object-fit:contain}
+    h1,h2,h3,p{margin-top:0}
+    h1{font-size:34px;margin-bottom:8px}
+    h2{font-size:30px;color:var(--orange);margin-bottom:6px}
+    h3{font-size:20px;margin-bottom:12px}
+    .muted,.center-muted{color:var(--muted)}
+    .center-muted{text-align:center;margin:10px 0 16px}
+    .tiny{font-size:13px;color:#b8b8b8}
+    .version{text-align:center;color:#777;margin-top:18px}
+    label{display:block;font-weight:800;margin:12px 0 7px}
+    input,select,textarea{width:100%;background:#090909;color:#fff;border:1px solid #333;border-radius:12px;padding:13px;font-size:16px}
+    textarea{min-height:80px;resize:vertical}
+    button{font:inherit;cursor:pointer}
+    .primary,.outline,.danger{border-radius:14px;padding:14px 16px;font-weight:900;border:0}
+    .primary{background:linear-gradient(90deg,var(--orange),var(--orange2));color:#fff}
+    .outline{background:#111;color:#fff;border:1px solid #444}
+    .danger{background:linear-gradient(90deg,#b60000,var(--red));color:#fff}
+    .full{width:100%;margin-top:12px}
+    .login-screen{display:none;min-height:100vh;align-items:center;justify-content:center}
+    .login-screen.active{display:flex;flex-direction:column}
+    .login-card,.panel,.simple-panel{background:linear-gradient(180deg,#131313,#070707);border:1px solid var(--line);border-radius:24px;padding:18px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+    .login-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+    .toggle-btn{padding:12px;border-radius:12px;border:1px solid #333;background:#111;color:#fff;font-weight:900}
+    .toggle-btn.active{background:var(--orange);border-color:var(--orange)}
+    .simple-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+    .logout-small,.back-btn{background:#111;border:1px solid #333;color:#fff;border-radius:12px;padding:10px 12px;font-weight:900}
+    .simple-name{margin:10px 0 16px}.simple-name p{margin:0;color:#aaa}.simple-name h2{margin:2px 0 0}
+    .big-clock{width:100%;padding:22px;border-radius:22px;border:1px solid var(--orange);background:linear-gradient(90deg,var(--orange),var(--orange2));color:#fff;font-size:24px;font-weight:1000;text-transform:uppercase;box-shadow:0 12px 32px rgba(255,90,0,.22)}
+    .simple-panel{margin:16px 0}
+    .simple-actions{display:grid;grid-template-columns:1fr;gap:14px;margin:18px 0}
+    .simple-btn{min-height:88px;border-radius:22px;border:1px solid #2d2d2d;background:linear-gradient(180deg,#191919,#0d0d0d);color:#fff;display:flex;align-items:center;gap:18px;padding:18px;text-align:left}
+    .simple-btn span{font-size:38px}.simple-btn b{font-size:22px}
+    .danger-lite{border-color:rgba(255,77,53,.6)}
+    .simple-secondary{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .simple-secondary button,.manager-button{background:#111;border:1px solid #333;color:#fff;border-radius:16px;padding:16px;font-weight:900}
+    .manager-button{width:100%;margin-top:14px;border-color:var(--orange);color:var(--orange)}
+    .simple-counts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
+    .simple-counts div{background:#111;border:1px solid #2a2a2a;border-radius:18px;padding:16px;text-align:center}
+    .simple-counts b{display:block;color:var(--orange);font-size:32px}
+    .simple-counts span{font-size:13px;color:#ccc}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .item{background:#0b0b0b;border:1px solid #282828;border-radius:16px;padding:14px;margin:10px 0}
+    .item h3{font-size:16px;margin:0 0 6px}.item p{color:#ccc;margin:4px 0}
+    .tag{display:inline-block;border:1px solid #444;background:#151515;border-radius:999px;padding:3px 8px;font-size:11px;color:var(--orange);vertical-align:middle}
+    .item-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .item-actions button{padding:9px 12px;border-radius:10px;border:1px solid #333;background:#151515;color:#fff;font-weight:900}
+    .item-actions .resolve{border-color:var(--green);color:var(--green)}
+    .item-actions .delete{border-color:var(--red);color:#ff8b7f}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid #333;background:#0d0d0d;color:#ddd;font-size:12px;font-weight:900}
+    .pill.good{color:var(--green);border-color:rgba(57,214,111,.5)}
+    .pill.warn{color:var(--yellow);border-color:rgba(255,194,71,.5)}
+    .pill.bad{color:var(--red);border-color:rgba(255,77,53,.5)}
+    .status-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .urgent-block{border-color:rgba(255,77,53,.45)}
+    .success-section{border-color:rgba(57,214,111,.25)}
+    details summary{font-size:18px;font-weight:900;cursor:pointer}
+    #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:#111;color:#fff;border:1px solid var(--orange);border-radius:14px;padding:12px 18px;z-index:50;opacity:0;transition:.25s;box-shadow:0 12px 30px rgba(0,0,0,.6)}
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    @media(max-width:520px){#app{padding:14px 12px 28px}.two-col{grid-template-columns:1fr}.top-logo{height:34px}.simple-btn{min-height:76px}.simple-btn span{font-size:32px}.simple-btn b{font-size:20px}}
+  </style>
+</head>
+<body>
+<div id="toast"></div>
+<main id="app">
+
+<section id="loginScreen" class="screen active login-screen">
+  <div class="login-card">
+    <img class="brand-logo" src="assets/finest-wordmark.png" alt="Finest Aquatics" />
+    <h1>Staff Hub</h1>
+    <p class="muted">Simple for staff. Powerful for management.</p>
+    <div class="login-toggle">
+      <button class="toggle-btn active" data-login-mode="staff">Staff PIN</button>
+      <button class="toggle-btn" data-login-mode="manager">Manager</button>
+    </div>
+    <div id="staffLogin">
+      <label>Staff PIN</label>
+      <input id="pinInput" type="password" inputmode="numeric" placeholder="••••" maxlength="6" />
+      <button class="primary full" data-action="staff-login">Sign In</button>
+      <p class="tiny">Demo staff PIN: 1234</p>
+    </div>
+    <div id="managerLogin" class="hidden">
+      <label>Manager PIN</label>
+      <input id="managerPinInput" type="password" inputmode="numeric" placeholder="••••" maxlength="6" />
+      <button class="primary full" data-action="manager-login">Manager Sign In</button>
+      <p class="tiny">Demo manager PIN: 9999</p>
+    </div>
+  </div>
+  <p class="version">V9 Bulletproof</p>
+</section>
+
+<section id="homeScreen" class="screen">
+  <header class="simple-top">
+    <img src="assets/finest-wordmark.png" alt="Finest Aquatics" class="top-logo" />
+    <button class="logout-small" data-action="logout">Logout</button>
+  </header>
+
+  <div class="simple-name">
+    <p>Logged in as</p>
+    <h2 id="currentUserName">Staff Member</h2>
+  </div>
+
+  <button id="clockBtn" class="big-clock" data-action="toggle-clock">Clock In</button>
+  <p id="clockInfo" class="center-muted">Start your shift before logging work.</p>
+
+  <section class="simple-panel">
+    <h3>Today’s Tasks</h3>
+    <div id="staffTaskMiniList"></div>
+    <button class="outline full" data-action="view-my-tasks">View My Tasks</button>
+  </section>
+
+  <section class="simple-actions">
+    <button class="simple-btn" data-action="open-job" data-type="Feeding"><span>🐟</span><b>Feed Tank</b></button>
+    <button class="simple-btn" data-action="open-job" data-type="Cleaning"><span>🪣</span><b>Clean Tank</b></button>
+    <button class="simple-btn danger-lite" data-action="show" data-target="problemScreen"><span>⚠️</span><b>Report Problem</b></button>
+    <button class="simple-btn" data-action="open-tests"><span>🧪</span><b>Add Tank Test</b></button>
+  </section>
+
+  <section class="simple-secondary">
+    <button data-action="open-rota">Rota</button>
+    <button data-action="open-handover">Handover</button>
+  </section>
+
+  <button id="managerButton" class="manager-button hidden" data-action="open-manager">Manager Control</button>
+</section>
+
+<section id="jobScreen" class="screen">
+  <header class="simple-top"><button class="back-btn" data-action="home">Back</button><h2 id="jobTitle">Log Job</h2></header>
+  <form id="jobForm" class="simple-panel">
+    <label>Tank Number / Name</label><input id="tankInput" placeholder="e.g. Tank 4" required />
+    <label>Notes</label><textarea id="jobNotes" placeholder="Optional notes"></textarea>
+    <button class="primary full" type="submit">Save</button>
+  </form>
+</section>
+
+<section id="problemScreen" class="screen">
+  <header class="simple-top"><button class="back-btn" data-action="home">Back</button><h2>Report Problem</h2></header>
+  <form id="problemForm" class="simple-panel">
+    <label>What is wrong?</label>
+    <select id="problemType">
+      <option>Fish died</option><option>Fish unhealthy</option><option>Coral unhealthy</option><option>Equipment issue</option><option>Water issue</option><option>Other</option>
+    </select>
+    <label>Tank / Location</label><input id="problemTank" placeholder="e.g. Marine 3" required />
+    <label>Fish / Coral / Item</label><input id="problemSubject" placeholder="e.g. Clownfish, Torch coral, heater" />
+    <label>Quantity</label><input id="problemQty" type="number" min="1" placeholder="1" />
+    <label>Notes / Symptoms</label><textarea id="problemNotes" placeholder="What happened?"></textarea>
+    <button class="primary full" type="submit">Submit Problem</button>
+  </form>
+</section>
+
+<section id="testsScreen" class="screen">
+  <header class="simple-top"><button class="back-btn" data-action="home">Back</button><h2>Add Tank Test</h2></header>
+  <form id="testForm" class="simple-panel">
+    <label>Tank Number / Name</label><input id="testTank" placeholder="e.g. Coral Tank 1" required />
+    <div class="two-col">
+      <div><label>pH</label><input id="ph" type="number" step="0.01" /></div>
+      <div><label>Ammonia</label><input id="ammonia" type="number" step="0.01" /></div>
+      <div><label>Nitrite</label><input id="nitrite" type="number" step="0.01" /></div>
+      <div><label>Nitrate</label><input id="nitrate" type="number" step="0.1" /></div>
+      <div><label>Phosphate</label><input id="phosphate" type="number" step="0.01" /></div>
+      <div><label>Salinity</label><input id="salinity" placeholder="1.025 / 35ppt" /></div>
+      <div><label>Temp</label><input id="temp" type="number" step="0.1" /></div>
+      <div><label>Alk</label><input id="alk" type="number" step="0.1" /></div>
+    </div>
+    <label>Notes</label><textarea id="testNotes" placeholder="Optional notes"></textarea>
+    <button class="primary full" type="submit">Save Test</button>
+  </form>
+</section>
+
+<section id="staffTasksScreen" class="screen">
+  <header class="simple-top"><button class="back-btn" data-action="home">Back</button><h2>My Tasks</h2></header>
+  <div id="staffTasksList"></div>
+</section>
+
+<section id="rotaScreen" class="screen">
+  <header class="simple-top"><button class="back-btn" data-action="home">Back</button><h2>Rota</h2></header>
+  <div id="rotaList"></div>
+</section>
+
+<section id="handoverScreen" class="screen">
+  <header class="simple-top"><button class="back-btn" data-action="home">Back</button><h2>Handover</h2></header>
+  <form id="handoverForm" class="simple-panel">
+    <label>Priority</label><select id="handoverPriority"><option>Normal</option><option>Important</option><option>Urgent</option></select>
+    <label>Note</label><textarea id="handoverNote" required placeholder="Important handover note..."></textarea>
+    <button class="primary full" type="submit">Add Note</button>
+  </form>
+  <div id="handoverList"></div>
+</section>
+
+<section id="managerScreen" class="screen">
+  <header class="simple-top">
+    <button class="back-btn" data-action="home">Back</button>
+    <img src="assets/finest-wordmark.png" alt="Finest Aquatics" class="top-logo" />
+  </header>
+
+  <div class="simple-name">
+    <p>Manager</p>
+    <h2>Control Centre</h2>
+  </div>
+
+  <div class="simple-counts">
+    <div><b id="mgrOpenIssues">0</b><span>Problems</span></div>
+    <div><b id="mgrTasksDue">0</b><span>Tasks</span></div>
+    <div><b id="mgrClockedIn">0</b><span>Staff In</span></div>
+    <div><b id="mgrDoneToday">0</b><span>Done</span></div>
+  </div>
+
+  <section class="simple-panel">
+    <h3>Give Task</h3>
+    <form id="quickTaskForm">
+      <label>Who?</label><select id="quickTaskStaff"></select>
+      <label>Task</label><input id="quickTaskTitle" placeholder="e.g. Check skimmer and water level" required />
+      <label>Location</label><input id="quickTaskLocation" placeholder="e.g. Sump area / All tanks" />
+      <div class="two-col">
+        <div><label>Date</label><input id="quickTaskDueDate" type="date" /></div>
+        <div><label>Time</label><input id="quickTaskDueTime" type="time" /></div>
+      </div>
+      <div class="two-col">
+        <div><label>Repeat</label><select id="quickTaskRepeat"><option>One-off</option><option>Daily</option><option>Weekly</option></select></div>
+        <div><label>Priority</label><select id="quickTaskPriority"><option>Normal</option><option>Important</option><option>Urgent</option></select></div>
+      </div>
+      <button class="primary full" type="submit">Give Task</button>
+    </form>
+  </section>
+
+  <section class="simple-panel"><h3>Who Clocked In</h3><div id="mgrClockedInList"></div></section>
+  <section class="simple-panel urgent-block"><h3>Problems</h3><div id="mgrLiveIssues"></div></section>
+  <section class="simple-panel"><h3>Tasks To Do</h3><div id="mgrPendingTasks"></div></section>
+  <section class="simple-panel success-section"><h3>Done Today</h3><div id="mgrCompletedTasks"></div></section>
+
+  <section class="simple-panel">
+    <h3>Staff</h3>
+    <form id="quickStaffForm">
+      <label>Name</label><input id="quickStaffName" placeholder="Staff name" />
+      <div class="two-col">
+        <div><label>PIN</label><input id="quickStaffPin" inputmode="numeric" placeholder="1234" /></div>
+        <div><label>Role</label><select id="quickStaffRole"><option value="staff">Staff</option><option value="manager">Manager</option></select></div>
+      </div>
+      <button class="primary full" type="submit">Add Staff</button>
+    </form>
+    <div id="staffList"></div>
+  </section>
+
+  <details class="simple-panel">
+    <summary>Admin extras</summary>
+    <button class="outline full" data-action="export">Export Backup</button>
+    <button class="danger full" data-action="clear-logs">Clear Logs</button>
+    <button class="danger full" data-action="factory-reset">Factory Reset</button>
+  </details>
+</section>
+
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+const store = {
+  get(k, fallback){ try{return JSON.parse(localStorage.getItem(k) || JSON.stringify(fallback));}catch(e){return fallback;} },
+  set(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+};
+
+const initialStaff = [
+  {id:"s1", name:"Staff Member", pin:"1234", role:"staff", active:true},
+  {id:"m1", name:"Manager", pin:"9999", role:"manager", active:true}
+];
+
+if(!localStorage.getItem("staff")) store.set("staff", initialStaff);
+["jobs","tests","issues","rota","handover","shifts","tasks","clockEvents"].forEach(k=>{ if(!localStorage.getItem(k)) store.set(k,[]); });
+
+let currentUser = null;
+let currentJobType = "Feeding";
+
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function todayKey(){ return new Date().toISOString().slice(0,10); }
+function now(){ return new Date().toLocaleString("en-GB",{dateStyle:"medium",timeStyle:"short"}); }
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
+function showScreen(id){ $$(".screen").forEach(s=>s.classList.remove("active")); $("#"+id).classList.add("active"); }
+function isManager(){ return currentUser && currentUser.role==="manager"; }
+function activeShift(){ return currentUser ? store.get("shifts",[]).find(s=>s.staff===currentUser.name && !s.clockOut) : null; }
+function isOverdue(t){ if(t.status==="Done" || !t.dueDate) return false; return Date.now() > new Date(`${t.dueDate}T${t.dueTime || "23:59"}`).getTime(); }
+function isTodayOrDue(t){ return t.repeat==="Daily" || t.dueDate===todayKey(); }
+
+function itemHTML(title, meta="", body="", tag="", actions=""){
+  return `<div class="item"><h3>${title} ${tag?`<span class="tag">${tag}</span>`:""}</h3>${meta?`<p>${meta}</p>`:""}${body?`<p>${body}</p>`:""}${actions}</div>`;
+}
+
+function renderHome(){
+  $("#currentUserName").textContent = currentUser.name;
+  $("#managerButton").classList.toggle("hidden", !isManager());
+  const shift = activeShift();
+  $("#clockBtn").textContent = shift ? "Clock Out" : "Clock In";
+  $("#clockInfo").textContent = shift ? `Clocked in: ${shift.clockIn}` : "Start your shift before logging work.";
+  renderStaffTasksPreview();
+}
+
+function renderStaffTasksPreview(){
+  const tasks = store.get("tasks",[]).filter(t=>(t.assignedTo==="All Staff" || t.assignedTo===currentUser.name) && t.status!=="Done" && isTodayOrDue(t));
+  $("#staffTaskMiniList").innerHTML = tasks.length ? tasks.slice(0,4).map(t=>itemHTML(t.title, `${t.priority} • ${t.location||"No location"}`, "", t.repeat, `<div class="item-actions"><button class="resolve" data-action="complete-task" data-id="${t.id}">Done</button></div>`)).join("") : `<div class="item">No tasks assigned for today.</div>`;
+}
+
+function renderStaffTasksFull(){
+  const tasks = store.get("tasks",[]).filter(t=>(t.assignedTo==="All Staff" || t.assignedTo===currentUser.name) && t.status!=="Done" && isTodayOrDue(t));
+  $("#staffTasksList").innerHTML = tasks.length ? tasks.map(t=>itemHTML(t.title, `${t.priority} • Due ${t.dueDate||"-"} ${t.dueTime||""}`, `${t.location?`Location: ${t.location}<br>`:""}${t.notes||""}`, t.repeat, `<div class="item-actions"><button class="resolve" data-action="complete-task" data-id="${t.id}">Done</button></div>`)).join("") : `<div class="item">No tasks assigned.</div>`;
+}
+
+function renderManager(){
+  const issues = store.get("issues",[]).filter(i=>i.status!=="Resolved");
+  const tasks = store.get("tasks",[]);
+  const pending = tasks.filter(t=>t.status!=="Done");
+  const doneToday = tasks.filter(t=>t.status==="Done" && t.completedDate===todayKey());
+  const shifts = store.get("shifts",[]).filter(s=>!s.clockOut);
+
+  $("#mgrOpenIssues").textContent = issues.length;
+  $("#mgrTasksDue").textContent = pending.length;
+  $("#mgrClockedIn").textContent = shifts.length;
+  $("#mgrDoneToday").textContent = doneToday.length;
+
+  populateTaskStaff();
+
+  $("#mgrClockedInList").innerHTML = shifts.length ? shifts.map(s=>itemHTML(s.staff, `Clocked in: ${s.clockIn}`, "", "In")).join("") : `<div class="item">No staff clocked in.</div>`;
+
+  $("#mgrLiveIssues").innerHTML = issues.length ? issues.map(i=>itemHTML(`${i.category}: ${i.subject || i.tank}`, `${i.tank} • ${i.staff} • ${i.time}`, i.desc || "", "Problem", `<div class="item-actions"><button data-action="issue-fixing" data-id="${i.id}">Fixing</button><button class="resolve" data-action="issue-resolve" data-id="${i.id}">Done</button><button class="delete" data-action="delete-record" data-collection="issues" data-id="${i.id}">Delete</button></div>`)).join("") : `<div class="item">No problems reported.</div>`;
+
+  $("#mgrPendingTasks").innerHTML = pending.length ? pending.map(t=>itemHTML(t.title, `${t.assignedTo} • Due ${t.dueDate||"-"} ${t.dueTime||""}`, `${t.location?`Location: ${t.location}<br>`:""}${t.notes||""}`, isOverdue(t)?"Overdue":"Pending", `<div class="item-actions"><button class="resolve" data-action="complete-task-manager" data-id="${t.id}">Done</button><button class="delete" data-action="delete-record" data-collection="tasks" data-id="${t.id}">Delete</button></div>`)).join("") : `<div class="item">No tasks waiting.</div>`;
+
+  $("#mgrCompletedTasks").innerHTML = doneToday.length ? doneToday.map(t=>itemHTML(t.title, `Done by ${t.completedBy || "staff"} • ${t.completedAt || ""}`, "", "Done", `<div class="item-actions"><button data-action="reopen-task" data-id="${t.id}">Reopen</button></div>`)).join("") : `<div class="item">Nothing completed today yet.</div>`;
+
+  renderStaffList();
+}
+
+function populateTaskStaff(){
+  const select=$("#quickTaskStaff");
+  const staff=store.get("staff",[]).filter(s=>s.active && s.role!=="manager");
+  select.innerHTML = `<option>All Staff</option>` + staff.map(s=>`<option>${s.name}</option>`).join("");
+  if(!$("#quickTaskDueDate").value) $("#quickTaskDueDate").value = todayKey();
+}
+
+function renderStaffList(){
+  const staff=store.get("staff",[]);
+  $("#staffList").innerHTML = staff.map(s=>{
+    const protectedManager = s.role==="manager" && s.pin==="9999";
+    return itemHTML(s.name, `Role: ${s.role} • PIN: ${s.pin}`, `Status: ${s.active?"Active":"Disabled"}`, s.role, `<div class="item-actions"><button data-action="toggle-staff" data-id="${s.id}">${s.active?"Disable":"Enable"}</button><button data-action="edit-staff" data-id="${s.id}">Edit</button>${protectedManager?"":`<button class="delete" data-action="delete-staff" data-id="${s.id}">Delete</button>`}</div>`);
+  }).join("");
+}
+
+function renderRota(){
+  const rota=store.get("rota",[]);
+  $("#rotaList").innerHTML = rota.length ? rota.map(r=>itemHTML(r.name, `${r.date} • ${r.shift}`, r.role, r.date===todayKey()?"Today":"Rota")).join("") : `<div class="item">No rota entries.</div>`;
+}
+
+function renderHandover(){
+  const hand=store.get("handover",[]);
+  $("#handoverList").innerHTML = hand.length ? hand.map(h=>itemHTML(`${h.priority} Note`, `${h.staff} • ${h.time}`, h.note, h.priority)).join("") : `<div class="item">No handover notes.</div>`;
+}
+
+function doCompleteTask(id, byManager=false){
+  const tasks=store.get("tasks",[]);
+  const t=tasks.find(x=>x.id===id);
+  if(!t) return toast("Task not found");
+  t.status="Done"; t.completedBy=currentUser.name; t.completedAt=now(); t.completedDate=todayKey();
+  store.set("tasks",tasks);
+  if(byManager){ renderManager(); } else { renderStaffTasksPreview(); renderStaffTasksFull(); }
+  toast("Task done");
+}
+
+function deleteRecord(collection,id){
+  if(!isManager()) return toast("Manager only");
+  if(!confirm("Delete this?")) return;
+  store.set(collection, store.get(collection,[]).filter(x=>x.id!==id));
+  renderManager(); toast("Deleted");
+}
+
+document.addEventListener("click", (e)=>{
+  const btn = e.target.closest("[data-action]");
+  if(!btn) return;
+  const action = btn.dataset.action;
+
+  if(action==="staff-login"){
+    const pin=$("#pinInput").value.trim();
+    const user=store.get("staff",[]).find(s=>s.pin===pin && s.active && s.role!=="manager");
+    if(!user) return toast("PIN not recognised");
+    currentUser=user; showScreen("homeScreen"); renderHome();
+  }
+
+  if(action==="manager-login"){
+    const pin=$("#managerPinInput").value.trim();
+    const user=store.get("staff",[]).find(s=>s.pin===pin && s.active && s.role==="manager");
+    if(!user) return toast("Manager PIN not recognised");
+    currentUser=user; showScreen("homeScreen"); renderHome();
+  }
+
+  if(action==="logout"){ currentUser=null; showScreen("loginScreen"); }
+  if(action==="home"){ showScreen("homeScreen"); renderHome(); }
+
+  if(action==="toggle-clock"){
+    let shifts=store.get("shifts",[]);
+    let events=store.get("clockEvents",[]);
+    const shift=activeShift();
+    if(shift){
+      shift.clockOut=now(); shift.clockOutRaw=Date.now(); shift.hours=((shift.clockOutRaw-shift.clockInRaw)/3600000).toFixed(2);
+      events.unshift({id:uid(),staff:currentUser.name,type:"Clock Out",time:shift.clockOut,date:todayKey(),raw:Date.now(),read:false,message:`${currentUser.name} clocked out`});
+      toast("Clocked out");
+    }else{
+      const clockIn=now();
+      shifts.unshift({id:uid(),staff:currentUser.name,date:todayKey(),clockIn,clockInRaw:Date.now()});
+      events.unshift({id:uid(),staff:currentUser.name,type:"Clock In",time:clockIn,date:todayKey(),raw:Date.now(),read:false,message:`${currentUser.name} clocked in`});
+      toast("Clocked in");
+    }
+    store.set("shifts",shifts); store.set("clockEvents",events); renderHome();
+  }
+
+  if(action==="open-job"){
+    currentJobType=btn.dataset.type;
+    $("#jobTitle").textContent=currentJobType==="Cleaning"?"Clean Tank":"Feed Tank";
+    showScreen("jobScreen");
+  }
+
+  if(action==="show"){ showScreen(btn.dataset.target); }
+  if(action==="open-tests"){ showScreen("testsScreen"); }
+  if(action==="open-rota"){ renderRota(); showScreen("rotaScreen"); }
+  if(action==="open-handover"){ renderHandover(); showScreen("handoverScreen"); }
+  if(action==="view-my-tasks"){ renderStaffTasksFull(); showScreen("staffTasksScreen"); }
+  if(action==="open-manager"){ renderManager(); showScreen("managerScreen"); }
+
+  if(action==="complete-task"){ doCompleteTask(btn.dataset.id,false); }
+  if(action==="complete-task-manager"){ doCompleteTask(btn.dataset.id,true); }
+  if(action==="reopen-task"){
+    const tasks=store.get("tasks",[]); const t=tasks.find(x=>x.id===btn.dataset.id);
+    if(t){ t.status="Not Started"; delete t.completedBy; delete t.completedAt; delete t.completedDate; store.set("tasks",tasks); renderManager(); toast("Task reopened"); }
+  }
+
+  if(action==="issue-fixing" || action==="issue-resolve"){
+    const issues=store.get("issues",[]); const i=issues.find(x=>x.id===btn.dataset.id);
+    if(i){ i.status=action==="issue-fixing"?"In Progress":"Resolved"; i.updatedBy=currentUser.name; i.updatedAt=now(); store.set("issues",issues); renderManager(); toast("Problem updated"); }
+  }
+
+  if(action==="delete-record"){ deleteRecord(btn.dataset.collection, btn.dataset.id); }
+
+  if(action==="toggle-staff"){
+    const staff=store.get("staff",[]); const s=staff.find(x=>x.id===btn.dataset.id);
+    if(s){ s.active=!s.active; store.set("staff",staff); renderManager(); toast("Staff updated"); }
+  }
+
+  if(action==="delete-staff"){
+    const staff=store.get("staff",[]); const s=staff.find(x=>x.id===btn.dataset.id);
+    if(!s) return; if(!confirm(`Delete ${s.name}?`)) return;
+    store.set("staff",staff.filter(x=>x.id!==s.id)); renderManager(); toast("Staff deleted");
+  }
+
+  if(action==="edit-staff"){
+    const staff=store.get("staff",[]); const s=staff.find(x=>x.id===btn.dataset.id);
+    if(!s) return;
+    const name=prompt("Staff name",s.name); if(name===null) return;
+    const pin=prompt("PIN",s.pin); if(pin===null) return;
+    s.name=name.trim()||s.name; s.pin=pin.trim()||s.pin;
+    store.set("staff",staff); renderManager(); toast("Staff updated");
+  }
+
+  if(action==="export"){
+    const data={staff:store.get("staff",[]),shifts:store.get("shifts",[]),jobs:store.get("jobs",[]),tests:store.get("tests",[]),issues:store.get("issues",[]),tasks:store.get("tasks",[]),rota:store.get("rota",[]),handover:store.get("handover",[])};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="finest-staff-hub-export.json"; a.click();
+  }
+
+  if(action==="clear-logs"){
+    if(confirm("Clear all logs but keep staff?")){
+      ["jobs","tests","issues","tasks","rota","handover","shifts","clockEvents"].forEach(k=>store.set(k,[])); renderManager(); toast("Logs cleared");
+    }
+  }
+
+  if(action==="factory-reset"){
+    if(confirm("Factory reset demo?")){
+      localStorage.clear(); store.set("staff",initialStaff); ["jobs","tests","issues","tasks","rota","handover","shifts","clockEvents"].forEach(k=>store.set(k,[])); currentUser=null; showScreen("loginScreen"); toast("Reset done");
+    }
+  }
+});
+
+document.addEventListener("click", e=>{
+  const modeBtn=e.target.closest("[data-login-mode]");
+  if(!modeBtn) return;
+  const mode=modeBtn.dataset.loginMode;
+  $$("[data-login-mode]").forEach(b=>b.classList.remove("active"));
+  modeBtn.classList.add("active");
+  $("#staffLogin").classList.toggle("hidden", mode!=="staff");
+  $("#managerLogin").classList.toggle("hidden", mode!=="manager");
+});
+
+$("#jobForm").addEventListener("submit",(e)=>{
+  e.preventDefault();
+  if(!activeShift()) return toast("Please clock in first");
+  const jobs=store.get("jobs",[]);
+  jobs.unshift({id:uid(),tank:$("#tankInput").value,type:currentJobType,staff:currentUser.name,date:todayKey(),time:now(),raw:Date.now(),notes:$("#jobNotes").value});
+  store.set("jobs",jobs); e.target.reset(); toast("Saved"); showScreen("homeScreen"); renderHome();
+});
+
+$("#problemForm").addEventListener("submit",(e)=>{
+  e.preventDefault();
+  if(!activeShift()) return toast("Please clock in first");
+  const issues=store.get("issues",[]);
+  issues.unshift({id:uid(),tank:$("#problemTank").value,staff:currentUser.name,time:now(),raw:Date.now(),date:todayKey(),category:$("#problemType").value,subject:$("#problemSubject").value,qty:$("#problemQty").value||"1",desc:$("#problemNotes").value||"Problem reported",status:"Open"});
+  store.set("issues",issues); e.target.reset(); toast("Problem submitted"); showScreen("homeScreen"); renderHome();
+});
+
+$("#testForm").addEventListener("submit",(e)=>{
+  e.preventDefault();
+  if(!activeShift()) return toast("Please clock in first");
+  const tests=store.get("tests",[]);
+  tests.unshift({id:uid(),tank:$("#testTank").value,staff:currentUser.name,time:now(),raw:Date.now(),date:todayKey(),ph:$("#ph").value,ammonia:$("#ammonia").value,nitrite:$("#nitrite").value,nitrate:$("#nitrate").value,phosphate:$("#phosphate").value,salinity:$("#salinity").value,temp:$("#temp").value,alk:$("#alk").value,notes:$("#testNotes").value});
+  store.set("tests",tests); e.target.reset(); toast("Test saved"); showScreen("homeScreen"); renderHome();
+});
+
+$("#handoverForm").addEventListener("submit",(e)=>{
+  e.preventDefault();
+  const hand=store.get("handover",[]);
+  hand.unshift({id:uid(),note:$("#handoverNote").value,priority:$("#handoverPriority").value,staff:currentUser.name,time:now(),raw:Date.now(),date:todayKey()});
+  store.set("handover",hand); e.target.reset(); toast("Note added"); renderHandover();
+});
+
+$("#quickTaskForm").addEventListener("submit",(e)=>{
+  e.preventDefault();
+  const tasks=store.get("tasks",[]);
+  tasks.unshift({id:uid(),assignedTo:$("#quickTaskStaff").value,title:$("#quickTaskTitle").value,location:$("#quickTaskLocation").value,dueDate:$("#quickTaskDueDate").value,dueTime:$("#quickTaskDueTime").value,repeat:$("#quickTaskRepeat").value,priority:$("#quickTaskPriority").value,notes:"",status:"Not Started",createdBy:currentUser.name,createdAt:now(),raw:Date.now()});
+  store.set("tasks",tasks); e.target.reset(); toast("Task given"); renderManager();
+});
+
+$("#quickStaffForm").addEventListener("submit",(e)=>{
+  e.preventDefault();
+  const staff=store.get("staff",[]);
+  const name=$("#quickStaffName").value.trim(); const pin=$("#quickStaffPin").value.trim();
+  if(!name || !pin) return toast("Name and PIN required");
+  if(staff.some(s=>s.pin===pin)) return toast("PIN already used");
+  staff.push({id:uid(),name,pin,role:$("#quickStaffRole").value,active:true});
+  store.set("staff",staff); e.target.reset(); toast("Staff added"); renderManager();
+});
+</script>
+</body>
+</html>
