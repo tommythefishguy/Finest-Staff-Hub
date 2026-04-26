@@ -123,15 +123,116 @@ function reopenTask(id){
 function renderLivestockIssues(){ const issues=store.get("issues",[]); $("#livestockIssuesList").innerHTML = issues.length ? issues.map(i=>{ const statusClass = i.status==="Resolved" ? "good" : i.status==="In Progress" ? "warn" : "bad"; const actions = `<div class="item-actions"><button onclick="setIssueStatus('${i.id}','Open')">Open</button><button onclick="setIssueStatus('${i.id}','In Progress')">In Progress</button><button class="resolve" onclick="setIssueStatus('${i.id}','Resolved')">Resolved</button><button onclick="addIssueNote('${i.id}')">Note</button><button class="delete" onclick="deleteRecord('issues','${i.id}',renderLivestockIssues)">Delete</button></div>`; return itemHTML(`${i.category}: ${i.subject || i.tank}`, `${i.tank} • ${i.staff} • ${i.time}`, `Qty: ${i.qty||"-"}<br>${i.desc}${i.managerNote?`<br><b>Manager note:</b> ${i.managerNote}`:""}<div class="status-row"><span class="pill ${statusClass}">${i.status||"Open"}</span></div>`, i.category, actions); }).join("") : `<div class="item">No livestock issues logged.</div>`; }
 function setIssueStatus(id,status){ const issues=store.get("issues",[]); const issue=issues.find(i=>i.id===id); if(issue){ issue.status=status; issue.updatedBy=currentUser.name; issue.updatedAt=now(); store.set("issues",issues); renderLivestockIssues(); renderManagerHome(); toast("Issue updated"); } }
 function addIssueNote(id){ const note=prompt("Manager note:"); if(note===null) return; const issues=store.get("issues",[]); const issue=issues.find(i=>i.id===id); if(issue){ issue.managerNote=note; issue.updatedBy=currentUser.name; issue.updatedAt=now(); store.set("issues",issues); renderLivestockIssues(); toast("Note added"); } }
-function renderManagerHome(){ const issues=store.get("issues",[]).filter(i=>i.status!=="Resolved"); const tasks=store.get("tasks",[]).filter(t=>t.status!=="Done"); const completedToday=store.get("tasks",[]).filter(t=>t.status==="Done" && t.completedDate===todayKey()).length; const shifts=store.get("shifts",[]).filter(s=>!s.clockOut); const logs=store.get("jobs",[]).filter(j=>j.date===todayKey()).length + store.get("tests",[]).filter(t=>t.date===todayKey()).length; $("#mgrOpenIssues").textContent=issues.length; $("#mgrTasksDue").textContent=tasks.length; $("#mgrClockedIn").textContent=shifts.length; $("#mgrLogsToday").textContent=logs; }
-$("#staffForm").onsubmit=(e)=>{ e.preventDefault(); const staff=store.get("staff",[]); const name=$("#newStaffName").value.trim(), pin=$("#newStaffPin").value.trim(); if(!name || !pin) return toast("Name and PIN required"); if(staff.some(s=>s.pin===pin)) return toast("PIN already used"); staff.push({id:uid(), name, pin, role:$("#newStaffRole").value, active:true}); store.set("staff",staff); e.target.reset(); renderStaffSettings(); toast("Staff added"); };
-function toggleStaff(id){ const staff=store.get("staff",[]); const s=staff.find(x=>x.id===id); if(s){ s.active=!s.active; store.set("staff",staff); renderStaffSettings(); } }
-function editStaff(id){ const staff=store.get("staff",[]); const s=staff.find(x=>x.id===id); if(!s) return; const name=prompt("Staff name:", s.name); if(name===null) return; const pin=prompt("PIN:", s.pin); if(pin===null) return; if(staff.some(x=>x.id!==id && x.pin===pin)) return toast("PIN already used"); s.name=name.trim()||s.name; s.pin=pin.trim()||s.pin; store.set("staff",staff); renderStaffSettings(); toast("Staff updated"); }
-function deleteStaff(id){ const staff=store.get("staff",[]); const target=staff.find(x=>x.id===id); if(!target) return; if(target.role==="manager" && target.pin==="9999") return toast("Demo manager cannot be deleted"); if(!confirm("Delete " + target.name + "? Existing logs stay saved.")) return; store.set("staff", staff.filter(x=>x.id!==id)); renderStaffSettings(); toast("Staff deleted"); }
-function renderStaffSettings(){ const staff=store.get("staff",[]); $("#staffList").innerHTML = staff.map(s=>{ const protectedManager = s.role==="manager" && s.pin==="9999"; const btn=`<div class="item-actions"><button onclick="editStaff('${s.id}')">Edit</button><button onclick="toggleStaff('${s.id}')">${s.active?'Disable':'Enable'}</button>${protectedManager ? '' : `<button class="delete" onclick="deleteStaff('${s.id}')">Delete</button>`}</div>`; return itemHTML(s.name, `Role: ${s.role} • PIN: ${s.pin}`, `Status: ${s.active?'Active':'Disabled'}`, s.role, btn); }).join(""); }
-function populateStaffFilter(){ const select=$("#historyStaff"); if(!select) return; const current=select.value; const staff=store.get("staff",[]); select.innerHTML=`<option value="all">All staff</option>` + staff.map(s=>`<option value="${s.name}">${s.name}</option>`).join(""); select.value=current || "all"; }
-function matchesDate(item, date){ if(!date) return true; if(item.date) return item.date===date; if(item.raw) return new Date(item.raw).toISOString().slice(0,10)===date; return true; }
-function renderHistory(){ populateStaffFilter(); const q=norm($("#historySearch")?.value), type=$("#historyType")?.value || "all", date=$("#historyDate")?.value || "", staffFilter=$("#historyStaff")?.value || "all"; let items=[]; if(type==="all"||type==="jobs") items.push(...store.get("jobs",[]).map(x=>({collection:"jobs", id:x.id, kind:"Job", staff:x.staff, date:x.date, raw:x.raw, title:x.tank, meta:`${x.type} • ${x.staff} • ${x.time}`, body:x.notes}))); if(type==="all"||type==="tests") items.push(...store.get("tests",[]).map(x=>({collection:"tests", id:x.id, kind:"Test", staff:x.staff, date:x.date, raw:x.raw, title:x.tank, meta:`${x.staff} • ${x.time}`, body:`pH ${x.ph||"-"} nitrate ${x.nitrate||"-"} phosphate ${x.phosphate||"-"}`}))); if(type==="all"||type==="issues") items.push(...store.get("issues",[]).map(x=>({collection:"issues", id:x.id, kind:"Problem", staff:x.staff, date:x.date, raw:x.raw, title:x.tank, meta:`${x.category} • ${x.staff} • ${x.time} • ${x.status}`, body:x.desc}))); if(type==="all"||type==="tasks") items.push(...store.get("tasks",[]).map(x=>({collection:"tasks", id:x.id, kind:"Task", staff:x.assignedTo, date:x.dueDate, raw:x.raw, title:x.title, meta:`${x.assignedTo} • ${x.status} • ${x.priority}`, body:x.notes}))); if(type==="all"||type==="shifts") items.push(...store.get("shifts",[]).map(x=>({collection:"shifts", id:x.id, kind:"Shift", staff:x.staff, date:x.date, raw:x.clockInRaw, title:x.staff, meta:`${x.clockIn} → ${x.clockOut || "Still clocked in"}`, body:x.hours?`${x.hours} hours`:""}))); if(type==="all"||type==="handover") items.push(...store.get("handover",[]).map(x=>({collection:"handover", id:x.id, kind:"Handover", staff:x.staff, date:x.date, raw:x.raw, title:x.priority+" Note", meta:`${x.staff} • ${x.time}`, body:x.note}))); items = items.filter(i=>(!q || norm(i.title+i.meta+i.body+i.kind).includes(q)) && (staffFilter==="all" || i.staff===staffFilter || i.staff==="All Staff") && matchesDate(i,date)); items.sort((a,b)=>(b.raw||0)-(a.raw||0)); $("#historyList").innerHTML = items.length ? items.map(i=>{ const actions = canManage() ? `<div class="item-actions"><button class="delete" onclick="deleteRecord('${i.collection}','${i.id}',renderHistory)">Delete</button></div>` : ""; return itemHTML(i.title,i.meta,i.body,i.kind,actions); }).join("") : `<div class="item">No matching records found.</div>`; }
+function renderManagerHome(){
+  const issues=store.get("issues",[]).filter(i=>i.status!=="Resolved");
+  const tasks=store.get("tasks",[]);
+  const pendingTasks=tasks.filter(t=>t.status!=="Done");
+  const completedToday=tasks.filter(t=>t.status==="Done" && t.completedDate===todayKey());
+  const shifts=store.get("shifts",[]).filter(s=>!s.clockOut);
+  const logsToday=store.get("jobs",[]).filter(j=>j.date===todayKey()).length + store.get("tests",[]).filter(t=>t.date===todayKey()).length;
+
+  $("#mgrOpenIssues").textContent=issues.length;
+  $("#mgrTasksDue").textContent=pendingTasks.length;
+  $("#mgrClockedIn").textContent=shifts.length;
+  const doneBox = $("#mgrDoneToday");
+  if(doneBox) doneBox.textContent=completedToday.length;
+
+  const issueBox=$("#mgrLiveIssues");
+  if(issueBox){
+    issueBox.innerHTML = issues.length ? issues.slice(0,4).map(i=>{
+      const cls = i.status==="In Progress" ? "warn" : "bad";
+      return itemHTML(
+        `${i.category}: ${i.subject || i.tank}`,
+        `${i.tank} • Reported by ${i.staff} • ${i.time}`,
+        `${i.desc || ""}<div class="status-row"><span class="pill ${cls}">${i.status||"Open"}</span></div>`,
+        "Issue",
+        `<div class="item-actions">
+          <button onclick="setIssueStatusQuick('${i.id}','In Progress')">In Progress</button>
+          <button class="resolve" onclick="setIssueStatusQuick('${i.id}','Resolved')">Resolve</button>
+        </div>`
+      );
+    }).join("") : `<div class="item">No open issues.</div>`;
+  }
+
+  const pendingBox=$("#mgrPendingTasks");
+  if(pendingBox){
+    pendingBox.innerHTML = pendingTasks.length ? pendingTasks.slice(0,5).map(t=>{
+      const statusClass = isOverdue(t) ? "bad" : "warn";
+      const due = t.dueDate ? `${t.dueDate} ${t.dueTime||""}` : "No due time";
+      return itemHTML(
+        t.title,
+        `${t.assignedTo} • Due ${due}`,
+        `${t.location?`Location: ${t.location}<br>`:""}${t.notes||""}<div class="status-row"><span class="pill ${statusClass}">${isOverdue(t)?"Overdue":"Pending"}</span><span class="pill">${t.priority}</span></div>`,
+        t.repeat,
+        `<div class="item-actions">
+          <button class="resolve" onclick="managerCompleteTaskQuick('${t.id}')">Mark Done</button>
+        </div>`
+      );
+    }).join("") : `<div class="item">No pending tasks.</div>`;
+  }
+
+  const doneBoxList=$("#mgrCompletedTasks");
+  if(doneBoxList){
+    doneBoxList.innerHTML = completedToday.length ? completedToday.slice(0,5).map(t=>{
+      return itemHTML(
+        t.title,
+        `Done by ${t.completedBy || "staff"} • ${t.completedAt || ""}`,
+        `${t.assignedTo ? `Assigned to: ${t.assignedTo}<br>` : ""}${t.notes || ""}<div class="status-row"><span class="pill good">Completed</span></div>`,
+        "Done",
+        `<div class="item-actions"><button onclick="reopenTaskQuick('${t.id}')">Reopen</button></div>`
+      );
+    }).join("") : `<div class="item">No tasks completed today yet.</div>`;
+  }
+
+  const shiftBox=$("#mgrClockedInList");
+  if(shiftBox){
+    shiftBox.innerHTML = shifts.length ? shifts.map(s=>{
+      return itemHTML(s.staff, `Clocked in: ${s.clockIn}`, "", "Live");
+    }).join("") : `<div class="item">No staff currently clocked in.</div>`;
+  }
+}
+
+function setIssueStatusQuick(id,status){
+  const issues=store.get("issues",[]);
+  const issue=issues.find(i=>i.id===id);
+  if(issue){
+    issue.status=status;
+    issue.updatedBy=currentUser.name;
+    issue.updatedAt=now();
+    store.set("issues",issues);
+    renderManagerHome();
+    toast("Issue updated");
+  }
+}
+
+function managerCompleteTaskQuick(id){
+  const tasks=store.get("tasks",[]);
+  const t=tasks.find(x=>x.id===id);
+  if(t){
+    t.status="Done";
+    t.completedBy=currentUser.name;
+    t.completedAt=now();
+    t.completedDate=todayKey();
+    store.set("tasks",tasks);
+    renderManagerHome();
+    toast("Task marked done");
+  }
+}
+
+function reopenTaskQuick(id){
+  const tasks=store.get("tasks",[]);
+  const t=tasks.find(x=>x.id===id);
+  if(t){
+    t.status="Not Started";
+    delete t.completedBy;
+    delete t.completedAt;
+    delete t.completedDate;
+    store.set("tasks",tasks);
+    renderManagerHome();
+    toast("Task reopened");
+  }
+}
+
 function renderManagerTools(){ const summary=[["Jobs", store.get("jobs",[]).length],["Tests", store.get("tests",[]).length],["Problems", store.get("issues",[]).length],["Tasks", store.get("tasks",[]).length],["Rota", store.get("rota",[]).length],["Handover", store.get("handover",[]).length],["Shifts", store.get("shifts",[]).length]]; $("#managerToolsSummary").innerHTML=summary.map(([name,count])=>itemHTML(name, `${count} records`, "", "Data")).join(""); }
 function exportData(){ const data={staff:store.get("staff",[]), shifts:store.get("shifts",[]), jobs:store.get("jobs",[]), tests:store.get("tests",[]), issues:store.get("issues",[]), tasks:store.get("tasks",[]), rota:store.get("rota",[]), handover:store.get("handover",[])}; const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="finest-staff-hub-export.json"; a.click(); }
 function clearLogsOnly(){ if(!canManage()) return; if(!confirm("Clear all logs, tests, problems, tasks, rota, handover and shifts? Staff profiles will stay.")) return; ["jobs","tests","issues","tasks","rota","handover","shifts"].forEach(k=>store.set(k,[])); renderManagerTools(); toast("Logs cleared"); }

@@ -1,15 +1,18 @@
-# Finest Aquatics Staff Hub V4 Task Fix
+# Finest Aquatics Staff Hub V5
 
-Fixes:
-- Staff completed tasks now clearly show in Manager Area > Task Progress
-- Manager can see who completed a task and when
-- Completed and pending tasks are split into clear sections
-- Manager can reopen a completed task if needed
+V5 update:
+- Manager Area is now a one-screen control centre
+- Live issues visible immediately
+- Pending tasks visible immediately
+- Completed tasks today visible immediately
+- Staff clocked-in list visible immediately
+- Quick actions: Assign Task, Staff, History, Tools
+- Managers can resolve issues and mark tasks done from the dashboard
 
 Upload/replace all files in GitHub root.
-Open with:
-https://tommythefishguy.github.io/Finest-Staff-Hub/?v=4-taskfix
+Open:
+https://tommythefishguy.github.io/Finest-Staff-Hub/?v=5
 
-Demo logins:
+Demo:
 - Staff PIN: 1234
 - Manager PIN: 9999
