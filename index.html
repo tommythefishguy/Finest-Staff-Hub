@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Staff Hub Core</title>
+<style>
+body{background:#000;color:#fff;font-family:sans-serif;padding:20px}
+input{padding:12px;border-radius:8px;border:none;margin:5px 0}
+button{padding:15px;margin:5px;border:none;border-radius:10px;font-size:16px}
+.primary{background:orange;color:#fff}
+.box{background:#111;padding:15px;border-radius:10px;margin:10px 0}
+</style>
+</head>
+<body>
+
+<div id="login">
+<h2>Login</h2>
+<input id="pin" placeholder="PIN"><br><br>
+<button class="primary" onclick="login()">Login</button>
+<p>Staff PIN: 1234</p>
+<p>Manager PIN: 9999</p>
+</div>
+
+<div id="staff" style="display:none">
+<h2 id="name"></h2>
+
+<button onclick="clock()" id="clockBtn">Clock In</button>
+
+<div class="box">
+<h3>Tasks</h3>
+<div id="tasks"></div>
+</div>
+
+<button onclick="report()">Report Problem</button>
+
+<br><br>
+<button onclick="showLogin()">Manager Login</button>
+</div>
+
+<div id="manager" style="display:none">
+<h2>Manager</h2>
+
+<div class="box">
+<h3>Give Task</h3>
+<input id="taskInput" placeholder="Task"><br><br>
+<button onclick="addTask()">Give Task</button>
+</div>
+
+<div class="box">
+<h3>Staff Clocked In</h3>
+<div id="clocked"></div>
+</div>
+
+<div class="box">
+<h3>Tasks</h3>
+<div id="allTasks"></div>
+</div>
+
+<div class="box">
+<h3>Problems</h3>
+<div id="problems"></div>
+</div>
+
+<button onclick="showLogin()">Back to Login</button>
+<button onclick="logout()">Refresh App</button>
+</div>
+
+<script>
+let user=null;
+
+let data={
+staff:[{name:"Staff",pin:"1234",role:"staff"},{name:"Manager",pin:"9999",role:"manager"}],
+tasks:[],
+clocked:[],
+problems:[]
+};
+
+function hideAll(){
+document.getElementById("login").style.display="none";
+document.getElementById("staff").style.display="none";
+document.getElementById("manager").style.display="none";
+}
+
+function showLogin(){
+user=null;
+hideAll();
+document.getElementById("pin").value="";
+document.getElementById("login").style.display="block";
+}
+
+function login(){
+let pin=document.getElementById("pin").value;
+let found=data.staff.find(s=>s.pin==pin);
+if(!found)return alert("Wrong PIN");
+
+user=found;
+hideAll();
+
+if(found.role=="manager"){
+document.getElementById("manager").style.display="block";
+renderManager();
+}else{
+document.getElementById("staff").style.display="block";
+document.getElementById("name").innerText=found.name;
+renderTasks();
+renderClockButton();
+}
+}
+
+function renderClockButton(){
+let btn=document.getElementById("clockBtn");
+let isIn=data.clocked.includes(user.name);
+btn.innerText=isIn ? "Clock Out" : "Clock In";
+}
+
+function clock(){
+let isIn=data.clocked.includes(user.name);
+
+if(isIn){
+data.clocked=data.clocked.filter(n=>n!==user.name);
+}else{
+data.clocked.push(user.name);
+}
+
+renderClockButton();
+renderManager();
+}
+
+function addTask(){
+let t=document.getElementById("taskInput").value;
+if(!t)return;
+data.tasks.push({text:t,done:false});
+document.getElementById("taskInput").value="";
+renderManager();
+renderTasks();
+}
+
+function renderTasks(){
+let el=document.getElementById("tasks");
+el.innerHTML="";
+data.tasks.forEach((t,i)=>{
+if(!t.done){
+el.innerHTML+=`<div>${t.text} <button onclick="done(${i})">Done</button></div>`;
+}
+});
+if(el.innerHTML==="") el.innerHTML="No tasks yet";
+}
+
+function done(i){
+data.tasks[i].done=true;
+renderTasks();
+renderManager();
+}
+
+function report(){
+let p=prompt("Problem?");
+if(!p)return;
+data.problems.push(user.name + ": " + p);
+renderManager();
+}
+
+function renderManager(){
+document.getElementById("clocked").innerText=data.clocked.join(", ")||"None";
+
+document.getElementById("allTasks").innerHTML=
+data.tasks.length ? data.tasks.map(t=>t.done?"✔ "+t.text:t.text).join("<br>") : "No tasks";
+
+document.getElementById("problems").innerHTML=
+data.problems.length ? data.problems.join("<br>") : "None";
+}
+
+function logout(){
+location.reload();
+}
+</script>
+
+</body>
+</html>
