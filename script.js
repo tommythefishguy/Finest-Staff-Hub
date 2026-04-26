@@ -173,31 +173,35 @@ function renderLivestockIssues(){ const issues=store.get("issues",[]); $("#lives
 function setIssueStatus(id,status){ const issues=store.get("issues",[]); const issue=issues.find(i=>i.id===id); if(issue){ issue.status=status; issue.updatedBy=currentUser.name; issue.updatedAt=now(); store.set("issues",issues); renderLivestockIssues(); renderManagerHome(); toast("Issue updated"); } }
 function addIssueNote(id){ const note=prompt("Manager note:"); if(note===null) return; const issues=store.get("issues",[]); const issue=issues.find(i=>i.id===id); if(issue){ issue.managerNote=note; issue.updatedBy=currentUser.name; issue.updatedAt=now(); store.set("issues",issues); renderLivestockIssues(); toast("Note added"); } }
 function renderManagerHome(){
+  populateQuickStaffSelect();
+  renderStaffSettings();
+
   const issues=store.get("issues",[]).filter(i=>i.status!=="Resolved");
   const tasks=store.get("tasks",[]);
   const pendingTasks=tasks.filter(t=>t.status!=="Done");
   const completedToday=tasks.filter(t=>t.status==="Done" && t.completedDate===todayKey());
   const shifts=store.get("shifts",[]).filter(s=>!s.clockOut);
-  const logsToday=store.get("jobs",[]).filter(j=>j.date===todayKey()).length + store.get("tests",[]).filter(t=>t.date===todayKey()).length;
 
   $("#mgrOpenIssues").textContent=issues.length;
   $("#mgrTasksDue").textContent=pendingTasks.length;
   $("#mgrClockedIn").textContent=shifts.length;
-  const doneBox = $("#mgrDoneToday");
+  const doneBox=$("#mgrDoneToday");
   if(doneBox) doneBox.textContent=completedToday.length;
 
   const issueBox=$("#mgrLiveIssues");
   if(issueBox){
-    issueBox.innerHTML = issues.length ? issues.slice(0,4).map(i=>{
+    issueBox.innerHTML = issues.length ? issues.slice(0,5).map(i=>{
       const cls = i.status==="In Progress" ? "warn" : "bad";
       return itemHTML(
         `${i.category}: ${i.subject || i.tank}`,
-        `${i.tank} • Reported by ${i.staff} • ${i.time}`,
+        `${i.tank} • ${i.staff} • ${i.time}`,
         `${i.desc || ""}<div class="status-row"><span class="pill ${cls}">${i.status||"Open"}</span></div>`,
         "Issue",
         `<div class="item-actions">
-          <button onclick="setIssueStatusQuick('${i.id}','In Progress')">In Progress</button>
-          <button class="resolve" onclick="setIssueStatusQuick('${i.id}','Resolved')">Resolve</button>
+          <button onclick="setIssueStatusQuick('${i.id}','In Progress')">Fixing</button>
+          <button class="resolve" onclick="setIssueStatusQuick('${i.id}','Resolved')">Done</button>
+          <button onclick="addIssueNoteQuick('${i.id}')">Note</button>
+          <button class="delete" onclick="deleteRecord('issues','${i.id}',renderManagerHome)">Delete</button>
         </div>`
       );
     }).join("") : `<div class="item">No open issues.</div>`;
@@ -205,7 +209,7 @@ function renderManagerHome(){
 
   const pendingBox=$("#mgrPendingTasks");
   if(pendingBox){
-    pendingBox.innerHTML = pendingTasks.length ? pendingTasks.slice(0,5).map(t=>{
+    pendingBox.innerHTML = pendingTasks.length ? pendingTasks.slice(0,8).map(t=>{
       const statusClass = isOverdue(t) ? "bad" : "warn";
       const due = t.dueDate ? `${t.dueDate} ${t.dueTime||""}` : "No due time";
       return itemHTML(
@@ -214,7 +218,8 @@ function renderManagerHome(){
         `${t.location?`Location: ${t.location}<br>`:""}${t.notes||""}<div class="status-row"><span class="pill ${statusClass}">${isOverdue(t)?"Overdue":"Pending"}</span><span class="pill">${t.priority}</span></div>`,
         t.repeat,
         `<div class="item-actions">
-          <button class="resolve" onclick="managerCompleteTaskQuick('${t.id}')">Mark Done</button>
+          <button class="resolve" onclick="managerCompleteTaskQuick('${t.id}')">Done</button>
+          <button class="delete" onclick="deleteRecord('tasks','${t.id}',renderManagerHome)">Delete</button>
         </div>`
       );
     }).join("") : `<div class="item">No pending tasks.</div>`;
@@ -222,7 +227,7 @@ function renderManagerHome(){
 
   const doneBoxList=$("#mgrCompletedTasks");
   if(doneBoxList){
-    doneBoxList.innerHTML = completedToday.length ? completedToday.slice(0,5).map(t=>{
+    doneBoxList.innerHTML = completedToday.length ? completedToday.slice(0,8).map(t=>{
       return itemHTML(
         t.title,
         `Done by ${t.completedBy || "staff"} • ${t.completedAt || ""}`,
@@ -250,13 +255,47 @@ function renderManagerHome(){
         `${e.staff} • ${e.time}`,
         `<div class="status-row"><span class="pill ${cls}">${e.message}</span></div>`,
         e.read ? "Seen" : "New",
-        `<div class="item-actions">${!e.read ? `<button onclick="markClockAlertRead('${e.id}')">Mark Seen</button>` : ""}</div>`
+        `<div class="item-actions">${!e.read ? `<button onclick="markClockAlertRead('${e.id}')">Seen</button>` : ""}</div>`
       );
     }).join("") : `<div class="item">No clock alerts yet.</div>`;
   }
+
+  renderManagerRotaPreview();
+  renderManagerHandoverPreview();
+  renderQuickHistory();
 }
 
-function setIssueStatusQuick(id,status){
+function populateQuickStaffSelect(){
+  const staff=store.get("staff",[]).filter(s=>s.active);
+  const select=$("#quickTaskStaff");
+  if(select) select.innerHTML=`<option>All Staff</option>` + staff.filter(s=>s.role!=="manager").map(s=>`<option>${s.name}</option>`).join("");
+  const date=$("#quickTaskDueDate");
+  if(date && !date.value) date.value=todayKey();
+  const rotaDate=$("#quickRotaDate");
+  if(rotaDate && !rotaDate.value) rotaDate.value=todayKey();
+}
+
+function renderManagerRotaPreview(){
+  const box=$("#mgrRotaList");
+  if(!box) return;
+  const rota=store.get("rota",[]);
+  box.innerHTML = rota.length ? rota.slice(0,5).map(r=>{
+    return itemHTML(r.name, `${r.date} • ${r.shift}`, r.role, r.date===todayKey() ? "Today" : "Rota",
+      `<div class="item-actions"><button class="delete" onclick="deleteRecord('rota','${r.id}',renderManagerHome)">Delete</button></div>`);
+  }).join("") : `<div class="item">No rota entries yet.</div>`;
+}
+
+function renderManagerHandoverPreview(){
+  const box=$("#mgrHandoverList");
+  if(!box) return;
+  const hand=store.get("handover",[]);
+  box.innerHTML = hand.length ? hand.slice(0,5).map(h=>{
+    return itemHTML(`${h.priority} Note`, `${h.staff} • ${h.time}`, h.note, h.priority,
+      `<div class="item-actions"><button class="delete" onclick="deleteRecord('handover','${h.id}',renderManagerHome)">Delete</button></div>`);
+  }).join("") : `<div class="item">No handover notes yet.</div>`;
+}
+
+function renderManagerTools(id,status){
   const issues=store.get("issues",[]);
   const issue=issues.find(i=>i.id===id);
   if(issue){
@@ -321,5 +360,173 @@ function renderManagerTools(){ const summary=[["Jobs", store.get("jobs",[]).leng
 function exportData(){ const data={staff:store.get("staff",[]), shifts:store.get("shifts",[]), jobs:store.get("jobs",[]), tests:store.get("tests",[]), issues:store.get("issues",[]), tasks:store.get("tasks",[]), rota:store.get("rota",[]), handover:store.get("handover",[])}; const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="finest-staff-hub-export.json"; a.click(); }
 function clearLogsOnly(){ if(!canManage()) return; if(!confirm("Clear all logs, tests, problems, tasks, rota, handover and shifts? Staff profiles will stay.")) return; ["jobs","tests","issues","tasks","rota","handover","shifts"].forEach(k=>store.set(k,[])); renderManagerTools(); toast("Logs cleared"); }
 function factoryResetDemo(){ if(!canManage()) return; if(!confirm("Factory reset demo? This clears everything and restores demo staff.")) return; localStorage.clear(); store.set("staff", initialStaff); ["jobs","tests","issues","tasks","rota","handover","shifts"].forEach(k=>store.set(k,[])); currentUser=null; showScreen("#loginScreen"); toast("Demo reset"); }
+
+const quickTaskForm=$("#quickTaskForm");
+if(quickTaskForm){
+  quickTaskForm.onsubmit=(e)=>{
+    e.preventDefault();
+    const tasks=store.get("tasks",[]);
+    tasks.unshift({
+      id:uid(),
+      assignedTo:$("#quickTaskStaff").value,
+      title:$("#quickTaskTitle").value,
+      location:$("#quickTaskLocation").value,
+      dueDate:$("#quickTaskDueDate").value,
+      dueTime:$("#quickTaskDueTime").value,
+      repeat:$("#quickTaskRepeat").value,
+      priority:$("#quickTaskPriority").value,
+      notes:$("#quickTaskNotes").value,
+      status:"Not Started",
+      createdBy:currentUser.name,
+      createdAt:now(),
+      raw:Date.now()
+    });
+    store.set("tasks",tasks);
+    e.target.reset();
+    toast("Task sent");
+    renderManagerHome();
+  };
+}
+
+const quickStaffForm=$("#quickStaffForm");
+if(quickStaffForm){
+  quickStaffForm.onsubmit=(e)=>{
+    e.preventDefault();
+    const staff=store.get("staff",[]);
+    const name=$("#quickStaffName").value.trim();
+    const pin=$("#quickStaffPin").value.trim();
+    if(!name || !pin) return toast("Name and PIN required");
+    if(staff.some(s=>s.pin===pin)) return toast("PIN already used");
+    staff.push({id:uid(), name, pin, role:$("#quickStaffRole").value, active:true});
+    store.set("staff",staff);
+    e.target.reset();
+    toast("Staff added");
+    renderManagerHome();
+  };
+}
+
+const quickRotaForm=$("#quickRotaForm");
+if(quickRotaForm){
+  quickRotaForm.onsubmit=(e)=>{
+    e.preventDefault();
+    const rota=store.get("rota",[]);
+    rota.unshift({id:uid(), name:$("#quickRotaName").value, date:$("#quickRotaDate").value, shift:$("#quickRotaShift").value, role:$("#quickRotaRole").value});
+    store.set("rota",rota);
+    e.target.reset();
+    toast("Rota added");
+    renderManagerHome();
+  };
+}
+
+const quickHandoverForm=$("#quickHandoverForm");
+if(quickHandoverForm){
+  quickHandoverForm.onsubmit=(e)=>{
+    e.preventDefault();
+    const hand=store.get("handover",[]);
+    hand.unshift({id:uid(), note:$("#quickHandoverNote").value, priority:$("#quickHandoverPriority").value, staff:currentUser.name, time:now(), raw:Date.now(), date:todayKey()});
+    store.set("handover",hand);
+    e.target.reset();
+    toast("Note added");
+    renderManagerHome();
+  };
+}
+
+
 function logout(){ currentUser=null; showScreen("#loginScreen"); $("#pinInput").value=""; $("#managerPinInput").value=""; }
 window.addEventListener("DOMContentLoaded",()=>{ $("#menuBtn")?.addEventListener("click", window.openMoreMenu); });
+
+
+function setIssueStatusQuick(id,status){
+  const issues=store.get("issues",[]);
+  const issue=issues.find(i=>i.id===id);
+  if(issue){
+    issue.status=status;
+    issue.updatedBy=currentUser.name;
+    issue.updatedAt=now();
+    store.set("issues",issues);
+    renderManagerHome();
+    toast("Issue updated");
+  }
+}
+
+function addIssueNoteQuick(id){
+  const note=prompt("Manager note:");
+  if(note===null) return;
+  const issues=store.get("issues",[]);
+  const issue=issues.find(i=>i.id===id);
+  if(issue){
+    issue.managerNote=note;
+    issue.updatedBy=currentUser.name;
+    issue.updatedAt=now();
+    store.set("issues",issues);
+    renderManagerHome();
+    toast("Note added");
+  }
+}
+
+function managerCompleteTaskQuick(id){
+  const tasks=store.get("tasks",[]);
+  const t=tasks.find(x=>x.id===id);
+  if(t){
+    t.status="Done";
+    t.completedBy=currentUser.name;
+    t.completedAt=now();
+    t.completedDate=todayKey();
+    store.set("tasks",tasks);
+    renderManagerHome();
+    toast("Task marked done");
+  }
+}
+
+function reopenTaskQuick(id){
+  const tasks=store.get("tasks",[]);
+  const t=tasks.find(x=>x.id===id);
+  if(t){
+    t.status="Not Started";
+    delete t.completedBy;
+    delete t.completedAt;
+    delete t.completedDate;
+    store.set("tasks",tasks);
+    renderManagerHome();
+    toast("Task reopened");
+  }
+}
+
+function markClockAlertRead(id){
+  const events=store.get("clockEvents",[]);
+  const event=events.find(e=>e.id===id);
+  if(event){
+    event.read=true;
+    store.set("clockEvents",events);
+    renderManagerHome();
+    toast("Alert marked seen");
+  }
+}
+
+function markAllClockAlertsSeen(){
+  const events=store.get("clockEvents",[]);
+  events.forEach(e=>e.read=true);
+  store.set("clockEvents",events);
+  renderManagerHome();
+  toast("All clock alerts marked seen");
+}
+
+function renderQuickHistory(){
+  const box=$("#quickHistoryList");
+  if(!box) return;
+  const q=norm($("#quickHistorySearch")?.value);
+  const type=$("#quickHistoryType")?.value || "all";
+  const date=$("#quickHistoryDate")?.value || "";
+  let items=[];
+  if(type==="all"||type==="jobs") items.push(...store.get("jobs",[]).map(x=>({collection:"jobs", id:x.id, kind:"Job", staff:x.staff, date:x.date, raw:x.raw, title:x.tank, meta:`${x.type} • ${x.staff} • ${x.time}`, body:x.notes})));
+  if(type==="all"||type==="tests") items.push(...store.get("tests",[]).map(x=>({collection:"tests", id:x.id, kind:"Test", staff:x.staff, date:x.date, raw:x.raw, title:x.tank, meta:`${x.staff} • ${x.time}`, body:`pH ${x.ph||"-"} nitrate ${x.nitrate||"-"} phosphate ${x.phosphate||"-"}`})));
+  if(type==="all"||type==="issues") items.push(...store.get("issues",[]).map(x=>({collection:"issues", id:x.id, kind:"Problem", staff:x.staff, date:x.date, raw:x.raw, title:x.tank, meta:`${x.category} • ${x.staff} • ${x.time} • ${x.status}`, body:x.desc})));
+  if(type==="all"||type==="tasks") items.push(...store.get("tasks",[]).map(x=>({collection:"tasks", id:x.id, kind:"Task", staff:x.assignedTo, date:x.dueDate, raw:x.raw, title:x.title, meta:`${x.assignedTo} • ${x.status} • ${x.priority}`, body:x.notes})));
+  if(type==="all"||type==="shifts") items.push(...store.get("shifts",[]).map(x=>({collection:"shifts", id:x.id, kind:"Shift", staff:x.staff, date:x.date, raw:x.clockInRaw, title:x.staff, meta:`${x.clockIn} → ${x.clockOut || "Still clocked in"}`, body:x.hours?`${x.hours} hours`:""})));
+  if(type==="all"||type==="handover") items.push(...store.get("handover",[]).map(x=>({collection:"handover", id:x.id, kind:"Handover", staff:x.staff, date:x.date, raw:x.raw, title:x.priority+" Note", meta:`${x.staff} • ${x.time}`, body:x.note})));
+  items = items.filter(i=>(!q || norm(i.title+i.meta+i.body+i.kind).includes(q)) && (!date || i.date===date));
+  items.sort((a,b)=>(b.raw||0)-(a.raw||0));
+  box.innerHTML = items.length ? items.slice(0,8).map(i=>{
+    return itemHTML(i.title,i.meta,i.body,i.kind,`<div class="item-actions"><button class="delete" onclick="deleteRecord('${i.collection}','${i.id}',renderManagerHome)">Delete</button></div>`);
+  }).join("") : `<div class="item">No records found.</div>`;
+}

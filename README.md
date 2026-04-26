@@ -1,15 +1,18 @@
-# Finest Aquatics Staff Hub V5 Clock Alerts
+# Finest Aquatics Staff Hub V6
 
-Adds:
-- Clock in/out alerts for management
-- Manager dashboard section showing clock activity
-- Mark alert seen
-- Mark all clock alerts seen
-- Clock events are stored locally in this demo build
+V6 update:
+- Manager control is now one screen
+- Assign tasks on same manager page
+- Staff management on same manager page
+- Issues, pending tasks, completed tasks, staff clocked in and clock alerts all on same page
+- Rota quick add
+- Handover quick add
+- History search
+- Export and reset tools
 
 Upload/replace all files in GitHub root.
 Open:
-https://tommythefishguy.github.io/Finest-Staff-Hub/?v=5-clock
+https://tommythefishguy.github.io/Finest-Staff-Hub/?v=6
 
 Demo:
 - Staff PIN: 1234

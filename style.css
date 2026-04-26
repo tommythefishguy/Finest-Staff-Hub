@@ -166,3 +166,52 @@ textarea{min-height:96px;resize:vertical}.pin-input{text-align:center;font-size:
   background:#2a1300;
   border-color:rgba(255,90,0,.45);
 }
+
+
+.simple-command{
+  text-align:left;
+}
+.simple-command h2{
+  margin:0 0 4px;
+  color:#ff5a00;
+  font-size:26px;
+}
+.urgent-block{
+  border-color:rgba(255,77,53,.45);
+  background:linear-gradient(180deg,rgba(255,77,53,.08),rgba(10,10,10,.88));
+}
+.inline-manager-form{
+  background:#0b0b0b;
+  border:1px solid #242424;
+  border-radius:16px;
+  padding:12px;
+  margin-bottom:12px;
+}
+.inline-manager-form textarea{
+  min-height:70px;
+}
+.dashboard-section{
+  margin:16px 0;
+  padding:14px;
+  border:1px solid #252525;
+  border-radius:20px;
+  background:rgba(10,10,10,.88);
+}
+.section-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:12px;
+}
+.section-head h3{
+  margin:0;
+  font-size:18px;
+}
+.compact-list .item{
+  padding:12px;
+  border-radius:14px;
+}
+.compact-list .item h3{
+  font-size:15px;
+}
