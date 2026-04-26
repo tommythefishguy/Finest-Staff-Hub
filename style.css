@@ -156,3 +156,13 @@ textarea{min-height:96px;resize:vertical}.pin-input{text-align:center;font-size:
 .success-section{
   border-color:rgba(57,214,111,.25);
 }
+
+
+.alert-section{
+  border-color:rgba(255,90,0,.35);
+  background:linear-gradient(180deg,rgba(255,90,0,.07),rgba(10,10,10,.86));
+}
+.alert-section .tag{
+  background:#2a1300;
+  border-color:rgba(255,90,0,.45);
+}

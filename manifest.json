@@ -1,7 +1,7 @@
 {
-  "name": "Finest Aquatics Staff Hub V5",
+  "name": "Finest Aquatics Staff Hub V5 Clock Alerts",
   "short_name": "Finest Hub",
-  "start_url": "./index.html?v=5",
+  "start_url": "./index.html?v=5-clock",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#ff5a00",

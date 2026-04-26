@@ -9,7 +9,7 @@ const initialStaff = [
   {id:"m1", name:"Manager", pin:"9999", role:"manager", active:true}
 ];
 if(!localStorage.getItem("staff")) store.set("staff", initialStaff);
-["jobs","tests","issues","rota","handover","shifts","tasks"].forEach(k=>{ if(!localStorage.getItem(k)) store.set(k,[]); });
+["jobs","tests","issues","rota","handover","shifts","tasks","clockEvents"].forEach(k=>{ if(!localStorage.getItem(k)) store.set(k,[]); });
 let currentUser = null;
 let loginMode = "staff";
 function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
@@ -29,7 +29,56 @@ $$(".toggle-btn").forEach(btn=>btn.onclick=()=>{ loginMode=btn.dataset.mode; $$(
 $("#staffSignIn").onclick=()=>{ const pin=$("#pinInput").value.trim(); const staff=store.get("staff",[]).find(s=>s.pin===pin && s.active && s.role!=="manager"); if(!staff) return toast("PIN not recognised"); currentUser=staff; goHome(); };
 $("#managerSignIn").onclick=()=>{ const pin=$("#managerPinInput").value.trim(); const manager=store.get("staff",[]).find(s=>s.pin===pin && s.active && s.role==="manager"); if(!manager) return toast("Manager PIN not recognised"); currentUser=manager; goHome(); };
 function activeShift(){ if(!currentUser) return null; return store.get("shifts",[]).find(s=>s.staff===currentUser.name && !s.clockOut); }
-$("#clockBtn").onclick=()=>{ let shifts=store.get("shifts",[]); let active=activeShift(); if(active){ active.clockOut=now(); active.clockOutRaw=Date.now(); active.hours=((active.clockOutRaw-active.clockInRaw)/3600000).toFixed(2); toast("Clocked out"); }else{ shifts.unshift({id:uid(), staff:currentUser.name, date:todayKey(), clockIn:now(), clockInRaw:Date.now()}); toast("Clocked in"); } store.set("shifts",shifts); renderHome(); };
+$("#clockBtn").onclick=()=>{
+  let shifts=store.get("shifts",[]);
+  let events=store.get("clockEvents",[]);
+  let active=activeShift();
+
+  if(active){
+    active.clockOut=now();
+    active.clockOutRaw=Date.now();
+    active.hours=((active.clockOutRaw-active.clockInRaw)/3600000).toFixed(2);
+
+    events.unshift({
+      id:uid(),
+      staff:currentUser.name,
+      type:"Clock Out",
+      time:active.clockOut,
+      raw:Date.now(),
+      date:todayKey(),
+      read:false,
+      message:currentUser.name + " clocked out"
+    });
+
+    toast("Clocked out");
+  }else{
+    const clockInTime=now();
+    shifts.unshift({
+      id:uid(),
+      staff:currentUser.name,
+      date:todayKey(),
+      clockIn:clockInTime,
+      clockInRaw:Date.now()
+    });
+
+    events.unshift({
+      id:uid(),
+      staff:currentUser.name,
+      type:"Clock In",
+      time:clockInTime,
+      raw:Date.now(),
+      date:todayKey(),
+      read:false,
+      message:currentUser.name + " clocked in"
+    });
+
+    toast("Clocked in");
+  }
+
+  store.set("shifts",shifts);
+  store.set("clockEvents",events);
+  renderHome();
+};
 function renderHome(){ $("#currentUserName").textContent=currentUser?.name || "Staff Member"; const active=activeShift(); $("#clockBtn").textContent=active ? "Clock Out" : "Clock In"; $("#clockInfo").textContent=active ? `Clocked in: ${active.clockIn}` : "Start your shift before logging work."; renderStaffTaskMini(); updateManagerOnly(); }
 function myTasks(){ return store.get("tasks",[]).filter(t => (t.assignedTo==="All Staff" || t.assignedTo===currentUser?.name) && t.status!=="Done" && isTodayOrDue(t)); }
 function renderStaffTaskMini(){ const tasks=myTasks(); $("#taskBadge").textContent=tasks.length; const list=$("#staffTaskMiniList"); if(!tasks.length){ list.innerHTML=`<div class="mini-task">No tasks assigned for today.</div>`; return; } list.innerHTML=tasks.slice(0,3).map(t=>`<div class="mini-task">${t.priority==="Urgent"?"⚠️":"✅"} ${t.title}</div>`).join(""); }
@@ -190,6 +239,21 @@ function renderManagerHome(){
       return itemHTML(s.staff, `Clocked in: ${s.clockIn}`, "", "Live");
     }).join("") : `<div class="item">No staff currently clocked in.</div>`;
   }
+
+  const alertBox=$("#mgrClockAlerts");
+  if(alertBox){
+    const events=store.get("clockEvents",[]);
+    alertBox.innerHTML = events.length ? events.slice(0,8).map(e=>{
+      const cls = e.type==="Clock In" ? "good" : "warn";
+      return itemHTML(
+        e.type,
+        `${e.staff} • ${e.time}`,
+        `<div class="status-row"><span class="pill ${cls}">${e.message}</span></div>`,
+        e.read ? "Seen" : "New",
+        `<div class="item-actions">${!e.read ? `<button onclick="markClockAlertRead('${e.id}')">Mark Seen</button>` : ""}</div>`
+      );
+    }).join("") : `<div class="item">No clock alerts yet.</div>`;
+  }
 }
 
 function setIssueStatusQuick(id,status){
@@ -231,6 +295,26 @@ function reopenTaskQuick(id){
     renderManagerHome();
     toast("Task reopened");
   }
+}
+
+
+function markClockAlertRead(id){
+  const events=store.get("clockEvents",[]);
+  const event=events.find(e=>e.id===id);
+  if(event){
+    event.read=true;
+    store.set("clockEvents",events);
+    renderManagerHome();
+    toast("Alert marked seen");
+  }
+}
+
+function markAllClockAlertsSeen(){
+  const events=store.get("clockEvents",[]);
+  events.forEach(e=>e.read=true);
+  store.set("clockEvents",events);
+  renderManagerHome();
+  toast("All clock alerts marked seen");
 }
 
 function renderManagerTools(){ const summary=[["Jobs", store.get("jobs",[]).length],["Tests", store.get("tests",[]).length],["Problems", store.get("issues",[]).length],["Tasks", store.get("tasks",[]).length],["Rota", store.get("rota",[]).length],["Handover", store.get("handover",[]).length],["Shifts", store.get("shifts",[]).length]]; $("#managerToolsSummary").innerHTML=summary.map(([name,count])=>itemHTML(name, `${count} records`, "", "Data")).join(""); }
