@@ -336,3 +336,20 @@ details.simple-panel summary{
 }
 #bottomNav{display:none!important}
 .icon-btn,.bottom-nav{display:none!important}
+
+
+/* V8 Manager Button Fix */
+.no-clutter-form button,
+#quickTaskForm button,
+#quickStaffForm button{
+  margin-top:12px;
+}
+.simple-panel h3{
+  color:#fff;
+}
+#managerHomeScreen .simple-panel{
+  margin-bottom:18px;
+}
+#managerHomeScreen .item-actions button{
+  min-width:88px;
+}

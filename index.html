@@ -12,6 +12,7 @@
 
 
 
+
 <style>
 :root{
   --bg:#000; --panel:#111; --panel2:#171717; --line:#2a2a2a; --text:#fff; --muted:#b8b8b8;
@@ -232,7 +233,7 @@ textarea{min-height:96px;resize:vertical}.pin-input{text-align:center;font-size:
 }
 
 
-/* V7 Ultra Simple */
+/* V8 Simple Manager Fix */
 body:before{opacity:.10}
 .simple-top{
   display:flex;
@@ -352,6 +353,23 @@ details.simple-panel summary{
 #bottomNav{display:none!important}
 .icon-btn,.bottom-nav{display:none!important}
 
+
+/* V8 Manager Button Fix */
+.no-clutter-form button,
+#quickTaskForm button,
+#quickStaffForm button{
+  margin-top:12px;
+}
+.simple-panel h3{
+  color:#fff;
+}
+#managerHomeScreen .simple-panel{
+  margin-bottom:18px;
+}
+#managerHomeScreen .item-actions button{
+  min-width:88px;
+}
+
 </style>
 </head>
 <body>
@@ -380,7 +398,7 @@ details.simple-panel summary{
       <p class="tiny">Demo manager PIN: 9999</p>
     </div>
   </div>
-  <p class="version">V7 Ultra Simple</p>
+  <p class="version">V8 Simple Manager Fix</p>
 </section>
 
 
@@ -509,6 +527,7 @@ details.simple-panel summary{
 
 
 
+
 <section id="managerHomeScreen" class="screen">
   <header class="simple-top">
     <button class="logout-small" onclick="goHome()">Back</button>
@@ -521,31 +540,41 @@ details.simple-panel summary{
   </div>
 
   <div class="simple-counts">
-    <div><b id="mgrOpenIssues">0</b><span>Issues</span></div>
+    <div><b id="mgrOpenIssues">0</b><span>Problems</span></div>
     <div><b id="mgrTasksDue">0</b><span>Tasks</span></div>
     <div><b id="mgrClockedIn">0</b><span>Staff In</span></div>
     <div><b id="mgrDoneToday">0</b><span>Done</span></div>
   </div>
 
   <section class="simple-panel">
-    <h3>Send Task</h3>
+    <h3>Give Task</h3>
     <form id="quickTaskForm" class="no-clutter-form">
       <label>Who?</label>
       <select id="quickTaskStaff"></select>
-      <label>What needs doing?</label>
-      <input id="quickTaskTitle" placeholder="e.g. Check skimmer and water levels" required />
-      <label>Where?</label>
+
+      <label>Task</label>
+      <input id="quickTaskTitle" placeholder="e.g. Check skimmer and water level" required />
+
+      <label>Location</label>
       <input id="quickTaskLocation" placeholder="e.g. Sump area / All tanks" />
+
       <div class="two-col">
         <div><label>Date</label><input id="quickTaskDueDate" type="date" /></div>
         <div><label>Time</label><input id="quickTaskDueTime" type="time" /></div>
       </div>
+
       <div class="two-col">
         <div><label>Repeat</label><select id="quickTaskRepeat"><option>One-off</option><option>Daily</option><option>Weekly</option></select></div>
         <div><label>Priority</label><select id="quickTaskPriority"><option>Normal</option><option>Important</option><option>Urgent</option></select></div>
       </div>
-      <button class="primary full" type="submit">Send Task</button>
+
+      <button class="primary full" type="submit">Give Task</button>
     </form>
+  </section>
+
+  <section class="simple-panel">
+    <h3>Who Clocked In</h3>
+    <div id="mgrClockedInList" class="list compact-list"></div>
   </section>
 
   <section class="simple-panel urgent-block">
@@ -561,11 +590,6 @@ details.simple-panel summary{
   <section class="simple-panel success-section">
     <h3>Done Today</h3>
     <div id="mgrCompletedTasks" class="list compact-list"></div>
-  </section>
-
-  <section class="simple-panel">
-    <h3>Staff Clocked In</h3>
-    <div id="mgrClockedInList" class="list compact-list"></div>
   </section>
 
   <section class="simple-panel">
@@ -652,6 +676,7 @@ details.simple-panel summary{
 
 
 </main>
+
 
 
 
@@ -1207,6 +1232,188 @@ function renderQuickHistory(){
     return itemHTML(i.title,i.meta,i.body,i.kind,`<div class="item-actions"><button class="delete" onclick="deleteRecord('${i.collection}','${i.id}',renderManagerHome)">Delete</button></div>`);
   }).join("") : `<div class="item">No records found.</div>`;
 }
+
+
+/* V8 SIMPLE MANAGER FIX */
+function v8ManagerStaffOptions(){
+  const select = document.getElementById("quickTaskStaff");
+  if(!select) return;
+  const staff = store.get("staff",[]).filter(s=>s.active && s.role !== "manager");
+  select.innerHTML = `<option>All Staff</option>` + staff.map(s=>`<option>${s.name}</option>`).join("");
+  const date = document.getElementById("quickTaskDueDate");
+  if(date && !date.value) date.value = todayKey();
+}
+
+function renderManagerHome(){
+  v8ManagerStaffOptions();
+  renderStaffSettings();
+
+  const issues = store.get("issues",[]).filter(i=>i.status !== "Resolved");
+  const tasks = store.get("tasks",[]);
+  const pendingTasks = tasks.filter(t=>t.status !== "Done");
+  const completedToday = tasks.filter(t=>t.status === "Done" && t.completedDate === todayKey());
+  const shifts = store.get("shifts",[]).filter(s=>!s.clockOut);
+
+  const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  setText("mgrOpenIssues", issues.length);
+  setText("mgrTasksDue", pendingTasks.length);
+  setText("mgrClockedIn", shifts.length);
+  setText("mgrDoneToday", completedToday.length);
+
+  const clockBox = document.getElementById("mgrClockedInList");
+  if(clockBox){
+    clockBox.innerHTML = shifts.length ? shifts.map(s =>
+      itemHTML(s.staff, `Clocked in: ${s.clockIn}`, "", "In")
+    ).join("") : `<div class="item">No staff clocked in.</div>`;
+  }
+
+  const issueBox = document.getElementById("mgrLiveIssues");
+  if(issueBox){
+    issueBox.innerHTML = issues.length ? issues.map(i =>
+      itemHTML(
+        `${i.category || "Problem"}: ${i.subject || i.tank}`,
+        `${i.tank} • ${i.staff} • ${i.time}`,
+        i.desc || "",
+        "Problem",
+        `<div class="item-actions">
+          <button onclick="setIssueStatusQuick('${i.id}','In Progress')">Fixing</button>
+          <button class="resolve" onclick="setIssueStatusQuick('${i.id}','Resolved')">Done</button>
+          <button class="delete" onclick="deleteRecord('issues','${i.id}',renderManagerHome)">Delete</button>
+        </div>`
+      )
+    ).join("") : `<div class="item">No problems reported.</div>`;
+  }
+
+  const pendingBox = document.getElementById("mgrPendingTasks");
+  if(pendingBox){
+    pendingBox.innerHTML = pendingTasks.length ? pendingTasks.map(t => {
+      const due = t.dueDate ? `${t.dueDate} ${t.dueTime || ""}` : "No due time";
+      return itemHTML(
+        t.title,
+        `${t.assignedTo} • ${due}`,
+        `${t.location ? `Location: ${t.location}<br>` : ""}${t.notes || ""}`,
+        isOverdue(t) ? "Overdue" : "Pending",
+        `<div class="item-actions">
+          <button class="resolve" onclick="managerCompleteTaskQuick('${t.id}')">Done</button>
+          <button class="delete" onclick="deleteRecord('tasks','${t.id}',renderManagerHome)">Delete</button>
+        </div>`
+      );
+    }).join("") : `<div class="item">No tasks waiting.</div>`;
+  }
+
+  const doneBox = document.getElementById("mgrCompletedTasks");
+  if(doneBox){
+    doneBox.innerHTML = completedToday.length ? completedToday.map(t =>
+      itemHTML(
+        t.title,
+        `Done by ${t.completedBy || "staff"} • ${t.completedAt || ""}`,
+        "",
+        "Done",
+        `<div class="item-actions"><button onclick="reopenTaskQuick('${t.id}')">Reopen</button></div>`
+      )
+    ).join("") : `<div class="item">Nothing completed today yet.</div>`;
+  }
+}
+
+function setIssueStatusQuick(id,status){
+  const issues = store.get("issues",[]);
+  const issue = issues.find(i=>i.id===id);
+  if(issue){
+    issue.status = status;
+    issue.updatedBy = currentUser.name;
+    issue.updatedAt = now();
+    store.set("issues",issues);
+    renderManagerHome();
+    toast("Problem updated");
+  }
+}
+
+function managerCompleteTaskQuick(id){
+  const tasks = store.get("tasks",[]);
+  const t = tasks.find(x=>x.id===id);
+  if(t){
+    t.status = "Done";
+    t.completedBy = currentUser.name;
+    t.completedAt = now();
+    t.completedDate = todayKey();
+    store.set("tasks",tasks);
+    renderManagerHome();
+    toast("Task done");
+  }
+}
+
+function reopenTaskQuick(id){
+  const tasks = store.get("tasks",[]);
+  const t = tasks.find(x=>x.id===id);
+  if(t){
+    t.status = "Not Started";
+    delete t.completedBy;
+    delete t.completedAt;
+    delete t.completedDate;
+    store.set("tasks",tasks);
+    renderManagerHome();
+    toast("Task reopened");
+  }
+}
+
+function v8AttachManagerHandlers(){
+  const taskForm = document.getElementById("quickTaskForm");
+  if(taskForm && !taskForm.dataset.bound){
+    taskForm.dataset.bound = "1";
+    taskForm.addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const tasks = store.get("tasks",[]);
+      tasks.unshift({
+        id: uid(),
+        assignedTo: document.getElementById("quickTaskStaff").value,
+        title: document.getElementById("quickTaskTitle").value,
+        location: document.getElementById("quickTaskLocation").value,
+        dueDate: document.getElementById("quickTaskDueDate").value,
+        dueTime: document.getElementById("quickTaskDueTime").value,
+        repeat: document.getElementById("quickTaskRepeat").value,
+        priority: document.getElementById("quickTaskPriority").value,
+        notes: "",
+        status: "Not Started",
+        createdBy: currentUser.name,
+        createdAt: now(),
+        raw: Date.now()
+      });
+      store.set("tasks",tasks);
+      e.target.reset();
+      toast("Task given");
+      renderManagerHome();
+    });
+  }
+
+  const staffForm = document.getElementById("quickStaffForm");
+  if(staffForm && !staffForm.dataset.bound){
+    staffForm.dataset.bound = "1";
+    staffForm.addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const staff = store.get("staff",[]);
+      const name = document.getElementById("quickStaffName").value.trim();
+      const pin = document.getElementById("quickStaffPin").value.trim();
+      if(!name || !pin) return toast("Name and PIN required");
+      if(staff.some(s=>s.pin===pin)) return toast("PIN already used");
+      staff.push({id:uid(), name, pin, role:document.getElementById("quickStaffRole").value, active:true});
+      store.set("staff",staff);
+      e.target.reset();
+      toast("Staff added");
+      renderManagerHome();
+    });
+  }
+}
+
+const oldShowScreenV8 = showScreen;
+showScreen = function(id){
+  oldShowScreenV8(id);
+  if(id === "#managerHomeScreen"){
+    setTimeout(()=>{
+      v8AttachManagerHandlers();
+      renderManagerHome();
+    }, 0);
+  }
+};
 
 </script>
 </body>

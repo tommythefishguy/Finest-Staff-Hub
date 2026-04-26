@@ -1,20 +1,21 @@
-# Finest Aquatics Staff Hub V7 Ultra Simple
+# Finest Aquatics Staff Hub V8
 
-Changes:
-- Removed bottom navigation
-- Removed extra icons and digging
-- Staff screen has only the essential buttons
-- Manager screen is stripped down to:
-  - Send Task
+Fixes:
+- Give Task works
+- Manager buttons work
+- Manager section simplified
+- Removed feed/clean/test style clutter from manager area
+- Manager sees:
+  - Give Task
+  - Who Clocked In
   - Problems
   - Tasks To Do
   - Done Today
-  - Staff Clocked In
-  - Staff Management
-  - Admin extras hidden at bottom
+  - Staff
+  - Admin extras
 
 Open:
-https://tommythefishguy.github.io/Finest-Staff-Hub/?v=7
+https://tommythefishguy.github.io/Finest-Staff-Hub/?v=8
 
 Demo:
 - Staff PIN: 1234

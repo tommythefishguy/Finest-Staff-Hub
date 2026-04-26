@@ -548,3 +548,185 @@ function renderQuickHistory(){
     return itemHTML(i.title,i.meta,i.body,i.kind,`<div class="item-actions"><button class="delete" onclick="deleteRecord('${i.collection}','${i.id}',renderManagerHome)">Delete</button></div>`);
   }).join("") : `<div class="item">No records found.</div>`;
 }
+
+
+/* V8 SIMPLE MANAGER FIX */
+function v8ManagerStaffOptions(){
+  const select = document.getElementById("quickTaskStaff");
+  if(!select) return;
+  const staff = store.get("staff",[]).filter(s=>s.active && s.role !== "manager");
+  select.innerHTML = `<option>All Staff</option>` + staff.map(s=>`<option>${s.name}</option>`).join("");
+  const date = document.getElementById("quickTaskDueDate");
+  if(date && !date.value) date.value = todayKey();
+}
+
+function renderManagerHome(){
+  v8ManagerStaffOptions();
+  renderStaffSettings();
+
+  const issues = store.get("issues",[]).filter(i=>i.status !== "Resolved");
+  const tasks = store.get("tasks",[]);
+  const pendingTasks = tasks.filter(t=>t.status !== "Done");
+  const completedToday = tasks.filter(t=>t.status === "Done" && t.completedDate === todayKey());
+  const shifts = store.get("shifts",[]).filter(s=>!s.clockOut);
+
+  const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  setText("mgrOpenIssues", issues.length);
+  setText("mgrTasksDue", pendingTasks.length);
+  setText("mgrClockedIn", shifts.length);
+  setText("mgrDoneToday", completedToday.length);
+
+  const clockBox = document.getElementById("mgrClockedInList");
+  if(clockBox){
+    clockBox.innerHTML = shifts.length ? shifts.map(s =>
+      itemHTML(s.staff, `Clocked in: ${s.clockIn}`, "", "In")
+    ).join("") : `<div class="item">No staff clocked in.</div>`;
+  }
+
+  const issueBox = document.getElementById("mgrLiveIssues");
+  if(issueBox){
+    issueBox.innerHTML = issues.length ? issues.map(i =>
+      itemHTML(
+        `${i.category || "Problem"}: ${i.subject || i.tank}`,
+        `${i.tank} • ${i.staff} • ${i.time}`,
+        i.desc || "",
+        "Problem",
+        `<div class="item-actions">
+          <button onclick="setIssueStatusQuick('${i.id}','In Progress')">Fixing</button>
+          <button class="resolve" onclick="setIssueStatusQuick('${i.id}','Resolved')">Done</button>
+          <button class="delete" onclick="deleteRecord('issues','${i.id}',renderManagerHome)">Delete</button>
+        </div>`
+      )
+    ).join("") : `<div class="item">No problems reported.</div>`;
+  }
+
+  const pendingBox = document.getElementById("mgrPendingTasks");
+  if(pendingBox){
+    pendingBox.innerHTML = pendingTasks.length ? pendingTasks.map(t => {
+      const due = t.dueDate ? `${t.dueDate} ${t.dueTime || ""}` : "No due time";
+      return itemHTML(
+        t.title,
+        `${t.assignedTo} • ${due}`,
+        `${t.location ? `Location: ${t.location}<br>` : ""}${t.notes || ""}`,
+        isOverdue(t) ? "Overdue" : "Pending",
+        `<div class="item-actions">
+          <button class="resolve" onclick="managerCompleteTaskQuick('${t.id}')">Done</button>
+          <button class="delete" onclick="deleteRecord('tasks','${t.id}',renderManagerHome)">Delete</button>
+        </div>`
+      );
+    }).join("") : `<div class="item">No tasks waiting.</div>`;
+  }
+
+  const doneBox = document.getElementById("mgrCompletedTasks");
+  if(doneBox){
+    doneBox.innerHTML = completedToday.length ? completedToday.map(t =>
+      itemHTML(
+        t.title,
+        `Done by ${t.completedBy || "staff"} • ${t.completedAt || ""}`,
+        "",
+        "Done",
+        `<div class="item-actions"><button onclick="reopenTaskQuick('${t.id}')">Reopen</button></div>`
+      )
+    ).join("") : `<div class="item">Nothing completed today yet.</div>`;
+  }
+}
+
+function setIssueStatusQuick(id,status){
+  const issues = store.get("issues",[]);
+  const issue = issues.find(i=>i.id===id);
+  if(issue){
+    issue.status = status;
+    issue.updatedBy = currentUser.name;
+    issue.updatedAt = now();
+    store.set("issues",issues);
+    renderManagerHome();
+    toast("Problem updated");
+  }
+}
+
+function managerCompleteTaskQuick(id){
+  const tasks = store.get("tasks",[]);
+  const t = tasks.find(x=>x.id===id);
+  if(t){
+    t.status = "Done";
+    t.completedBy = currentUser.name;
+    t.completedAt = now();
+    t.completedDate = todayKey();
+    store.set("tasks",tasks);
+    renderManagerHome();
+    toast("Task done");
+  }
+}
+
+function reopenTaskQuick(id){
+  const tasks = store.get("tasks",[]);
+  const t = tasks.find(x=>x.id===id);
+  if(t){
+    t.status = "Not Started";
+    delete t.completedBy;
+    delete t.completedAt;
+    delete t.completedDate;
+    store.set("tasks",tasks);
+    renderManagerHome();
+    toast("Task reopened");
+  }
+}
+
+function v8AttachManagerHandlers(){
+  const taskForm = document.getElementById("quickTaskForm");
+  if(taskForm && !taskForm.dataset.bound){
+    taskForm.dataset.bound = "1";
+    taskForm.addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const tasks = store.get("tasks",[]);
+      tasks.unshift({
+        id: uid(),
+        assignedTo: document.getElementById("quickTaskStaff").value,
+        title: document.getElementById("quickTaskTitle").value,
+        location: document.getElementById("quickTaskLocation").value,
+        dueDate: document.getElementById("quickTaskDueDate").value,
+        dueTime: document.getElementById("quickTaskDueTime").value,
+        repeat: document.getElementById("quickTaskRepeat").value,
+        priority: document.getElementById("quickTaskPriority").value,
+        notes: "",
+        status: "Not Started",
+        createdBy: currentUser.name,
+        createdAt: now(),
+        raw: Date.now()
+      });
+      store.set("tasks",tasks);
+      e.target.reset();
+      toast("Task given");
+      renderManagerHome();
+    });
+  }
+
+  const staffForm = document.getElementById("quickStaffForm");
+  if(staffForm && !staffForm.dataset.bound){
+    staffForm.dataset.bound = "1";
+    staffForm.addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const staff = store.get("staff",[]);
+      const name = document.getElementById("quickStaffName").value.trim();
+      const pin = document.getElementById("quickStaffPin").value.trim();
+      if(!name || !pin) return toast("Name and PIN required");
+      if(staff.some(s=>s.pin===pin)) return toast("PIN already used");
+      staff.push({id:uid(), name, pin, role:document.getElementById("quickStaffRole").value, active:true});
+      store.set("staff",staff);
+      e.target.reset();
+      toast("Staff added");
+      renderManagerHome();
+    });
+  }
+}
+
+const oldShowScreenV8 = showScreen;
+showScreen = function(id){
+  oldShowScreenV8(id);
+  if(id === "#managerHomeScreen"){
+    setTimeout(()=>{
+      v8AttachManagerHandlers();
+      renderManagerHome();
+    }, 0);
+  }
+};
