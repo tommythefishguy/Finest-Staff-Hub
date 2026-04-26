@@ -215,3 +215,124 @@ textarea{min-height:96px;resize:vertical}.pin-input{text-align:center;font-size:
 .compact-list .item h3{
   font-size:15px;
 }
+
+
+/* V7 Ultra Simple */
+body:before{opacity:.10}
+.simple-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:8px 0 16px;
+}
+.logout-small{
+  background:#111;
+  border:1px solid #333;
+  color:#fff;
+  border-radius:12px;
+  padding:10px 12px;
+  font-weight:800;
+}
+.simple-name{
+  padding:8px 0 14px;
+}
+.simple-name p{
+  margin:0;
+  color:#aaa;
+}
+.simple-name h2{
+  margin:3px 0 0;
+  color:#ff5a00;
+  font-size:28px;
+}
+.simple-panel{
+  background:linear-gradient(180deg,#121212,#080808);
+  border:1px solid #2a2a2a;
+  border-radius:22px;
+  padding:16px;
+  margin:16px 0;
+}
+.simple-panel h3{
+  margin:0 0 12px;
+  font-size:19px;
+}
+.simple-task-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.simple-actions{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+  margin-top:16px;
+}
+.simple-btn{
+  min-height:86px;
+  border-radius:22px;
+  border:1px solid #2d2d2d;
+  background:linear-gradient(180deg,#181818,#0d0d0d);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  gap:18px;
+  padding:18px;
+  text-align:left;
+}
+.simple-btn span{font-size:36px}
+.simple-btn b{font-size:22px}
+.simple-secondary{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:16px;
+}
+.simple-secondary button,.manager-button{
+  background:#111;
+  border:1px solid #333;
+  color:#fff;
+  border-radius:16px;
+  padding:16px;
+  font-weight:900;
+}
+.manager-button{
+  width:100%;
+  margin-top:14px;
+  border-color:#ff5a00;
+  color:#ff5a00;
+}
+.simple-counts{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+}
+.simple-counts div{
+  background:#111;
+  border:1px solid #2a2a2a;
+  border-radius:18px;
+  padding:16px;
+  text-align:center;
+}
+.simple-counts b{
+  display:block;
+  color:#ff5a00;
+  font-size:30px;
+}
+.simple-counts span{
+  color:#ccc;
+  font-size:13px;
+}
+.no-clutter-form{
+  background:#0b0b0b;
+  border:1px solid #242424;
+  border-radius:16px;
+  padding:12px;
+}
+details.simple-panel summary{
+  font-size:18px;
+  font-weight:900;
+  cursor:pointer;
+}
+#bottomNav{display:none!important}
+.icon-btn,.bottom-nav{display:none!important}

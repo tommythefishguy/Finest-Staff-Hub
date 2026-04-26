@@ -1,7 +1,7 @@
 {
-  "name": "Finest Aquatics Staff Hub V6",
+  "name": "Finest Aquatics Staff Hub V7",
   "short_name": "Finest Hub",
-  "start_url": "./index.html?v=6",
+  "start_url": "./index.html?v=7",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#ff5a00",

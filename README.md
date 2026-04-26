@@ -1,18 +1,20 @@
-# Finest Aquatics Staff Hub V6
+# Finest Aquatics Staff Hub V7 Ultra Simple
 
-V6 update:
-- Manager control is now one screen
-- Assign tasks on same manager page
-- Staff management on same manager page
-- Issues, pending tasks, completed tasks, staff clocked in and clock alerts all on same page
-- Rota quick add
-- Handover quick add
-- History search
-- Export and reset tools
+Changes:
+- Removed bottom navigation
+- Removed extra icons and digging
+- Staff screen has only the essential buttons
+- Manager screen is stripped down to:
+  - Send Task
+  - Problems
+  - Tasks To Do
+  - Done Today
+  - Staff Clocked In
+  - Staff Management
+  - Admin extras hidden at bottom
 
-Upload/replace all files in GitHub root.
 Open:
-https://tommythefishguy.github.io/Finest-Staff-Hub/?v=6
+https://tommythefishguy.github.io/Finest-Staff-Hub/?v=7
 
 Demo:
 - Staff PIN: 1234

@@ -11,6 +11,7 @@
 
 
 
+
 <style>
 :root{
   --bg:#000; --panel:#111; --panel2:#171717; --line:#2a2a2a; --text:#fff; --muted:#b8b8b8;
@@ -230,6 +231,127 @@ textarea{min-height:96px;resize:vertical}.pin-input{text-align:center;font-size:
   font-size:15px;
 }
 
+
+/* V7 Ultra Simple */
+body:before{opacity:.10}
+.simple-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:8px 0 16px;
+}
+.logout-small{
+  background:#111;
+  border:1px solid #333;
+  color:#fff;
+  border-radius:12px;
+  padding:10px 12px;
+  font-weight:800;
+}
+.simple-name{
+  padding:8px 0 14px;
+}
+.simple-name p{
+  margin:0;
+  color:#aaa;
+}
+.simple-name h2{
+  margin:3px 0 0;
+  color:#ff5a00;
+  font-size:28px;
+}
+.simple-panel{
+  background:linear-gradient(180deg,#121212,#080808);
+  border:1px solid #2a2a2a;
+  border-radius:22px;
+  padding:16px;
+  margin:16px 0;
+}
+.simple-panel h3{
+  margin:0 0 12px;
+  font-size:19px;
+}
+.simple-task-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.simple-actions{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+  margin-top:16px;
+}
+.simple-btn{
+  min-height:86px;
+  border-radius:22px;
+  border:1px solid #2d2d2d;
+  background:linear-gradient(180deg,#181818,#0d0d0d);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  gap:18px;
+  padding:18px;
+  text-align:left;
+}
+.simple-btn span{font-size:36px}
+.simple-btn b{font-size:22px}
+.simple-secondary{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:16px;
+}
+.simple-secondary button,.manager-button{
+  background:#111;
+  border:1px solid #333;
+  color:#fff;
+  border-radius:16px;
+  padding:16px;
+  font-weight:900;
+}
+.manager-button{
+  width:100%;
+  margin-top:14px;
+  border-color:#ff5a00;
+  color:#ff5a00;
+}
+.simple-counts{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+}
+.simple-counts div{
+  background:#111;
+  border:1px solid #2a2a2a;
+  border-radius:18px;
+  padding:16px;
+  text-align:center;
+}
+.simple-counts b{
+  display:block;
+  color:#ff5a00;
+  font-size:30px;
+}
+.simple-counts span{
+  color:#ccc;
+  font-size:13px;
+}
+.no-clutter-form{
+  background:#0b0b0b;
+  border:1px solid #242424;
+  border-radius:16px;
+  padding:12px;
+}
+details.simple-panel summary{
+  font-size:18px;
+  font-weight:900;
+  cursor:pointer;
+}
+#bottomNav{display:none!important}
+.icon-btn,.bottom-nav{display:none!important}
+
 </style>
 </head>
 <body>
@@ -258,41 +380,42 @@ textarea{min-height:96px;resize:vertical}.pin-input{text-align:center;font-size:
       <p class="tiny">Demo manager PIN: 9999</p>
     </div>
   </div>
-  <p class="version">V6 One Screen Manager</p>
+  <p class="version">V7 Ultra Simple</p>
 </section>
 
+
 <section id="homeScreen" class="screen">
-  <header class="topbar">
-    <button id="menuBtn" class="icon-btn" type="button" onclick="openMoreMenu()">☰</button>
+  <header class="simple-top">
     <img src="assets/finest-wordmark.png" alt="Finest Aquatics" class="top-logo" />
-    <button class="icon-btn bell" onclick="openStaffTasks()">📋<span id="taskBadge">0</span></button>
+    <button class="logout-small" onclick="logout()">Logout</button>
   </header>
-  <div class="hero simple-hero">
-    <img src="assets/finest-circle-logo.png" class="circle-logo" alt="Finest Aquatics" />
-    <div>
-      <p class="welcome">Logged in as</p>
-      <h2 id="currentUserName">Staff Member</h2>
-      <p class="muted">Tap what you need to do.</p>
-    </div>
+
+  <div class="simple-name">
+    <p>Logged in as</p>
+    <h2 id="currentUserName">Staff Member</h2>
   </div>
+
   <button id="clockBtn" class="big-clock">Clock In</button>
   <p id="clockInfo" class="center-muted">Start your shift before logging work.</p>
-  <div class="panel">
-    <h3>Your Tasks Today</h3>
-    <div id="staffTaskMiniList" class="mini-list"></div>
-    <button class="outline full" onclick="openStaffTasks()">View My Tasks</button>
-  </div>
+
+  <section class="simple-panel">
+    <h3>Today’s Tasks</h3>
+    <div id="staffTaskMiniList" class="simple-task-list"></div>
+  </section>
+
   <section class="simple-actions">
     <button class="simple-btn" onclick="openForm('Feeding')"><span>🐟</span><b>Feed Tank</b></button>
     <button class="simple-btn" onclick="openForm('Cleaning')"><span>🪣</span><b>Clean Tank</b></button>
     <button class="simple-btn danger-lite" onclick="openProblemForm()"><span>⚠️</span><b>Report Problem</b></button>
     <button class="simple-btn" onclick="renderTests(); showScreen('#testsScreen');"><span>🧪</span><b>Add Tank Test</b></button>
   </section>
-  <section class="small-actions">
-    <button onclick="renderRota(); showScreen('#rotaScreen');">📅 Rota</button>
-    <button onclick="renderHandover(); showScreen('#handoverScreen');">📝 Handover</button>
-    <button class="manager-only" onclick="renderManagerHome(); showScreen('#managerHomeScreen');">📊 Manager Area</button>
+
+  <section class="simple-secondary">
+    <button onclick="renderRota(); showScreen('#rotaScreen');">Rota</button>
+    <button onclick="renderHandover(); showScreen('#handoverScreen');">Handover</button>
   </section>
+
+  <button class="manager-only manager-button" onclick="renderManagerHome(); showScreen('#managerHomeScreen');">Manager Control</button>
 </section>
 
 <section id="moreScreen" class="screen">
@@ -385,87 +508,69 @@ textarea{min-height:96px;resize:vertical}.pin-input{text-align:center;font-size:
 
 
 
+
 <section id="managerHomeScreen" class="screen">
-  <header class="page-header"><button class="back">‹</button><h2>Manager Control</h2></header>
+  <header class="simple-top">
+    <button class="logout-small" onclick="goHome()">Back</button>
+    <img src="assets/finest-wordmark.png" alt="Finest Aquatics" class="top-logo" />
+  </header>
 
-  <div class="manager-command simple-command">
-    <h2>Manager Control Centre</h2>
-    <p class="muted">Everything management needs is on this screen.</p>
+  <div class="simple-name">
+    <p>Manager</p>
+    <h2>Control Centre</h2>
   </div>
 
-  <div class="stats mini">
-    <div><b id="mgrOpenIssues">0</b><small>Issues</small></div>
-    <div><b id="mgrTasksDue">0</b><small>Tasks</small></div>
-    <div><b id="mgrClockedIn">0</b><small>Staff In</small></div>
-    <div><b id="mgrDoneToday">0</b><small>Done</small></div>
+  <div class="simple-counts">
+    <div><b id="mgrOpenIssues">0</b><span>Issues</span></div>
+    <div><b id="mgrTasksDue">0</b><span>Tasks</span></div>
+    <div><b id="mgrClockedIn">0</b><span>Staff In</span></div>
+    <div><b id="mgrDoneToday">0</b><span>Done</span></div>
   </div>
 
-  <section class="dashboard-section urgent-block">
-    <div class="section-head">
-      <h3>⚠️ Issues Needing Attention</h3>
-    </div>
-    <div id="mgrLiveIssues" class="list compact-list"></div>
-  </section>
-
-  <section class="dashboard-section">
-    <div class="section-head">
-      <h3>📋 Create Task</h3>
-    </div>
-    <form id="quickTaskForm" class="inline-manager-form">
-      <label>Assign To</label>
+  <section class="simple-panel">
+    <h3>Send Task</h3>
+    <form id="quickTaskForm" class="no-clutter-form">
+      <label>Who?</label>
       <select id="quickTaskStaff"></select>
-      <label>Task</label>
+      <label>What needs doing?</label>
       <input id="quickTaskTitle" placeholder="e.g. Check skimmer and water levels" required />
-      <label>Location</label>
-      <input id="quickTaskLocation" placeholder="Optional" />
+      <label>Where?</label>
+      <input id="quickTaskLocation" placeholder="e.g. Sump area / All tanks" />
       <div class="two-col">
-        <div><label>Due Date</label><input id="quickTaskDueDate" type="date" /></div>
-        <div><label>Due Time</label><input id="quickTaskDueTime" type="time" /></div>
+        <div><label>Date</label><input id="quickTaskDueDate" type="date" /></div>
+        <div><label>Time</label><input id="quickTaskDueTime" type="time" /></div>
       </div>
       <div class="two-col">
         <div><label>Repeat</label><select id="quickTaskRepeat"><option>One-off</option><option>Daily</option><option>Weekly</option></select></div>
         <div><label>Priority</label><select id="quickTaskPriority"><option>Normal</option><option>Important</option><option>Urgent</option></select></div>
       </div>
-      <label>Notes</label>
-      <textarea id="quickTaskNotes" placeholder="Extra instructions"></textarea>
       <button class="primary full" type="submit">Send Task</button>
     </form>
   </section>
 
-  <section class="dashboard-section">
-    <div class="section-head">
-      <h3>🔴 Pending Tasks</h3>
-    </div>
+  <section class="simple-panel urgent-block">
+    <h3>Problems</h3>
+    <div id="mgrLiveIssues" class="list compact-list"></div>
+  </section>
+
+  <section class="simple-panel">
+    <h3>Tasks To Do</h3>
     <div id="mgrPendingTasks" class="list compact-list"></div>
   </section>
 
-  <section class="dashboard-section success-section">
-    <div class="section-head">
-      <h3>✅ Completed Today</h3>
-    </div>
+  <section class="simple-panel success-section">
+    <h3>Done Today</h3>
     <div id="mgrCompletedTasks" class="list compact-list"></div>
   </section>
 
-  <section class="dashboard-section">
-    <div class="section-head">
-      <h3>👥 Staff Clocked In</h3>
-    </div>
+  <section class="simple-panel">
+    <h3>Staff Clocked In</h3>
     <div id="mgrClockedInList" class="list compact-list"></div>
   </section>
 
-  <section class="dashboard-section alert-section">
-    <div class="section-head">
-      <h3>🔔 Clock Alerts</h3>
-      <button onclick="markAllClockAlertsSeen()">Mark Seen</button>
-    </div>
-    <div id="mgrClockAlerts" class="list compact-list"></div>
-  </section>
-
-  <section class="dashboard-section">
-    <div class="section-head">
-      <h3>👤 Staff Management</h3>
-    </div>
-    <form id="quickStaffForm" class="inline-manager-form">
+  <section class="simple-panel">
+    <h3>Staff</h3>
+    <form id="quickStaffForm" class="no-clutter-form">
       <label>Name</label>
       <input id="quickStaffName" placeholder="Staff name" />
       <div class="two-col">
@@ -477,53 +582,12 @@ textarea{min-height:96px;resize:vertical}.pin-input{text-align:center;font-size:
     <div id="staffList" class="list compact-list"></div>
   </section>
 
-  <section class="dashboard-section">
-    <div class="section-head">
-      <h3>📅 Rota Quick Add</h3>
-    </div>
-    <form id="quickRotaForm" class="inline-manager-form">
-      <label>Staff Name</label><input id="quickRotaName" placeholder="e.g. Sarah" />
-      <div class="two-col"><div><label>Date</label><input id="quickRotaDate" type="date" /></div><div><label>Shift</label><input id="quickRotaShift" placeholder="09:00 - 17:00" /></div></div>
-      <label>Role / Area</label><input id="quickRotaRole" placeholder="Livestock, shop floor, maintenance" />
-      <button class="primary full" type="submit">Add Rota</button>
-    </form>
-    <div id="mgrRotaList" class="list compact-list"></div>
-  </section>
-
-  <section class="dashboard-section">
-    <div class="section-head">
-      <h3>📝 Handover Quick Note</h3>
-    </div>
-    <form id="quickHandoverForm" class="inline-manager-form">
-      <label>Priority</label><select id="quickHandoverPriority"><option>Normal</option><option>Important</option><option>Urgent</option></select>
-      <label>Note</label><textarea id="quickHandoverNote" placeholder="Add handover note"></textarea>
-      <button class="primary full" type="submit">Add Note</button>
-    </form>
-    <div id="mgrHandoverList" class="list compact-list"></div>
-  </section>
-
-  <section class="dashboard-section">
-    <div class="section-head">
-      <h3>🔍 History Search</h3>
-    </div>
-    <div class="inline-manager-form">
-      <label>Search</label><input id="quickHistorySearch" placeholder="Tank, staff, note..." oninput="renderQuickHistory()" />
-      <div class="two-col">
-        <div><label>Type</label><select id="quickHistoryType" onchange="renderQuickHistory()"><option value="all">All</option><option value="jobs">Jobs</option><option value="tests">Tests</option><option value="issues">Problems</option><option value="tasks">Tasks</option><option value="shifts">Shifts</option><option value="handover">Handover</option></select></div>
-        <div><label>Date</label><input id="quickHistoryDate" type="date" onchange="renderQuickHistory()" /></div>
-      </div>
-    </div>
-    <div id="quickHistoryList" class="list compact-list"></div>
-  </section>
-
-  <section class="dashboard-section">
-    <div class="section-head">
-      <h3>🛠️ Manager Tools</h3>
-    </div>
-    <button class="outline full" onclick="exportData()">Export Backup JSON</button>
-    <button class="danger full" onclick="clearLogsOnly(); renderManagerHome()">Clear Logs Only</button>
-    <button class="danger full" onclick="factoryResetDemo()">Factory Reset Demo</button>
-  </section>
+  <details class="simple-panel">
+    <summary>Admin extras</summary>
+    <button class="outline full" onclick="exportData()">Export Backup</button>
+    <button class="danger full" onclick="clearLogsOnly(); renderManagerHome()">Clear Logs</button>
+    <button class="danger full" onclick="factoryResetDemo()">Factory Reset</button>
+  </details>
 </section>
 
 <section id="assignTaskScreen" class="screen">
@@ -586,14 +650,9 @@ textarea{min-height:96px;resize:vertical}.pin-input{text-align:center;font-size:
   <div id="managerToolsSummary" class="list"></div>
 </section>
 
-<nav id="bottomNav" class="bottom-nav hidden">
-  <button onclick="goHome()" class="active">⌂<small>Home</small></button>
-  <button onclick="openStaffTasks()">📋<small>Tasks</small></button>
-  <button onclick="openForm('Feeding')" class="add">＋</button>
-  <button onclick="renderRota(); showScreen('#rotaScreen');">📅<small>Rota</small></button>
-  <button onclick="openMoreMenu()">•••<small>More</small></button>
-</nav>
+
 </main>
+
 
 
 
@@ -620,7 +679,7 @@ function norm(v){ return (v||"").toString().toLowerCase(); }
 function canManage(){ return currentUser?.role === "manager"; }
 function isTodayOrDue(task){ return task.repeat==="Daily" || task.dueDate===todayKey(); }
 function isOverdue(task){ if(task.status==="Done" || !task.dueDate) return false; const due = new Date(`${task.dueDate}T${task.dueTime || "23:59"}`); return Date.now() > due.getTime(); }
-function showScreen(id){ $$(".screen").forEach(s=>s.classList.remove("active")); const screen=$(id); if(screen) screen.classList.add("active"); $("#bottomNav").classList.toggle("hidden", id==="#loginScreen"); updateManagerOnly(); }
+function showScreen(id){ $$(".screen").forEach(s=>s.classList.remove("active")); const screen=$(id); if(screen) screen.classList.add("active"); const bottom=$("#bottomNav"); if(bottom) bottom.classList.toggle("hidden", true); updateManagerOnly(); }
 function goHome(){ showScreen("#homeScreen"); renderHome(); }
 function backToManager(){ renderManagerHome(); showScreen("#managerHomeScreen"); }
 function updateManagerOnly(){ $$(".manager-only").forEach(el=>el.style.display = canManage() ? "" : "none"); }
@@ -785,87 +844,105 @@ function renderManagerHome(){
   $("#mgrOpenIssues").textContent=issues.length;
   $("#mgrTasksDue").textContent=pendingTasks.length;
   $("#mgrClockedIn").textContent=shifts.length;
-  const doneBox=$("#mgrDoneToday");
-  if(doneBox) doneBox.textContent=completedToday.length;
+  $("#mgrDoneToday").textContent=completedToday.length;
 
   const issueBox=$("#mgrLiveIssues");
   if(issueBox){
     issueBox.innerHTML = issues.length ? issues.slice(0,5).map(i=>{
-      const cls = i.status==="In Progress" ? "warn" : "bad";
       return itemHTML(
         `${i.category}: ${i.subject || i.tank}`,
         `${i.tank} • ${i.staff} • ${i.time}`,
-        `${i.desc || ""}<div class="status-row"><span class="pill ${cls}">${i.status||"Open"}</span></div>`,
+        i.desc || "",
         "Issue",
         `<div class="item-actions">
           <button onclick="setIssueStatusQuick('${i.id}','In Progress')">Fixing</button>
           <button class="resolve" onclick="setIssueStatusQuick('${i.id}','Resolved')">Done</button>
-          <button onclick="addIssueNoteQuick('${i.id}')">Note</button>
-          <button class="delete" onclick="deleteRecord('issues','${i.id}',renderManagerHome)">Delete</button>
         </div>`
       );
-    }).join("") : `<div class="item">No open issues.</div>`;
+    }).join("") : `<div class="item">No problems reported.</div>`;
   }
 
   const pendingBox=$("#mgrPendingTasks");
   if(pendingBox){
     pendingBox.innerHTML = pendingTasks.length ? pendingTasks.slice(0,8).map(t=>{
-      const statusClass = isOverdue(t) ? "bad" : "warn";
       const due = t.dueDate ? `${t.dueDate} ${t.dueTime||""}` : "No due time";
       return itemHTML(
         t.title,
-        `${t.assignedTo} • Due ${due}`,
-        `${t.location?`Location: ${t.location}<br>`:""}${t.notes||""}<div class="status-row"><span class="pill ${statusClass}">${isOverdue(t)?"Overdue":"Pending"}</span><span class="pill">${t.priority}</span></div>`,
-        t.repeat,
+        `${t.assignedTo} • ${due}`,
+        `${t.location?`Location: ${t.location}<br>`:""}${t.notes||""}`,
+        isOverdue(t) ? "Overdue" : "Pending",
         `<div class="item-actions">
           <button class="resolve" onclick="managerCompleteTaskQuick('${t.id}')">Done</button>
           <button class="delete" onclick="deleteRecord('tasks','${t.id}',renderManagerHome)">Delete</button>
         </div>`
       );
-    }).join("") : `<div class="item">No pending tasks.</div>`;
+    }).join("") : `<div class="item">No tasks waiting.</div>`;
   }
 
-  const doneBoxList=$("#mgrCompletedTasks");
-  if(doneBoxList){
-    doneBoxList.innerHTML = completedToday.length ? completedToday.slice(0,8).map(t=>{
-      return itemHTML(
-        t.title,
-        `Done by ${t.completedBy || "staff"} • ${t.completedAt || ""}`,
-        `${t.assignedTo ? `Assigned to: ${t.assignedTo}<br>` : ""}${t.notes || ""}<div class="status-row"><span class="pill good">Completed</span></div>`,
-        "Done",
-        `<div class="item-actions"><button onclick="reopenTaskQuick('${t.id}')">Reopen</button></div>`
-      );
-    }).join("") : `<div class="item">No tasks completed today yet.</div>`;
+  const doneBox=$("#mgrCompletedTasks");
+  if(doneBox){
+    doneBox.innerHTML = completedToday.length ? completedToday.slice(0,8).map(t=>{
+      return itemHTML(t.title, `Done by ${t.completedBy || "staff"} • ${t.completedAt || ""}`, "", "Done",
+      `<div class="item-actions"><button onclick="reopenTaskQuick('${t.id}')">Reopen</button></div>`);
+    }).join("") : `<div class="item">Nothing completed yet today.</div>`;
   }
 
   const shiftBox=$("#mgrClockedInList");
   if(shiftBox){
-    shiftBox.innerHTML = shifts.length ? shifts.map(s=>{
-      return itemHTML(s.staff, `Clocked in: ${s.clockIn}`, "", "Live");
-    }).join("") : `<div class="item">No staff currently clocked in.</div>`;
+    shiftBox.innerHTML = shifts.length ? shifts.map(s=>itemHTML(s.staff, `Clocked in: ${s.clockIn}`, "", "In")).join("") : `<div class="item">No staff clocked in.</div>`;
   }
-
-  const alertBox=$("#mgrClockAlerts");
-  if(alertBox){
-    const events=store.get("clockEvents",[]);
-    alertBox.innerHTML = events.length ? events.slice(0,8).map(e=>{
-      const cls = e.type==="Clock In" ? "good" : "warn";
-      return itemHTML(
-        e.type,
-        `${e.staff} • ${e.time}`,
-        `<div class="status-row"><span class="pill ${cls}">${e.message}</span></div>`,
-        e.read ? "Seen" : "New",
-        `<div class="item-actions">${!e.read ? `<button onclick="markClockAlertRead('${e.id}')">Seen</button>` : ""}</div>`
-      );
-    }).join("") : `<div class="item">No clock alerts yet.</div>`;
-  }
-
-  renderManagerRotaPreview();
-  renderManagerHandoverPreview();
-  renderQuickHistory();
 }
 
 function populateQuickStaffSelect(){
+  const staff=store.get("staff",[]).filter(s=>s.active);
+  const select=$("#quickTaskStaff");
+  if(select) select.innerHTML=`<option>All Staff</option>` + staff.filter(s=>s.role!=="manager").map(s=>`<option>${s.name}</option>`).join("");
+  const date=$("#quickTaskDueDate");
+  if(date && !date.value) date.value=todayKey();
+}
+
+function setIssueStatusQuick(id,status){
+  const issues=store.get("issues",[]);
+  const issue=issues.find(i=>i.id===id);
+  if(issue){
+    issue.status=status;
+    issue.updatedBy=currentUser.name;
+    issue.updatedAt=now();
+    store.set("issues",issues);
+    renderManagerHome();
+    toast("Problem updated");
+  }
+}
+
+function managerCompleteTaskQuick(id){
+  const tasks=store.get("tasks",[]);
+  const t=tasks.find(x=>x.id===id);
+  if(t){
+    t.status="Done";
+    t.completedBy=currentUser.name;
+    t.completedAt=now();
+    t.completedDate=todayKey();
+    store.set("tasks",tasks);
+    renderManagerHome();
+    toast("Task done");
+  }
+}
+
+function reopenTaskQuick(id){
+  const tasks=store.get("tasks",[]);
+  const t=tasks.find(x=>x.id===id);
+  if(t){
+    t.status="Not Started";
+    delete t.completedBy;
+    delete t.completedAt;
+    delete t.completedDate;
+    store.set("tasks",tasks);
+    renderManagerHome();
+    toast("Task reopened");
+  }
+}
+
+function renderManagerTools(){
   const staff=store.get("staff",[]).filter(s=>s.active);
   const select=$("#quickTaskStaff");
   if(select) select.innerHTML=`<option>All Staff</option>` + staff.filter(s=>s.role!=="manager").map(s=>`<option>${s.name}</option>`).join("");

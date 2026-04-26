@@ -20,7 +20,7 @@ function norm(v){ return (v||"").toString().toLowerCase(); }
 function canManage(){ return currentUser?.role === "manager"; }
 function isTodayOrDue(task){ return task.repeat==="Daily" || task.dueDate===todayKey(); }
 function isOverdue(task){ if(task.status==="Done" || !task.dueDate) return false; const due = new Date(`${task.dueDate}T${task.dueTime || "23:59"}`); return Date.now() > due.getTime(); }
-function showScreen(id){ $$(".screen").forEach(s=>s.classList.remove("active")); const screen=$(id); if(screen) screen.classList.add("active"); $("#bottomNav").classList.toggle("hidden", id==="#loginScreen"); updateManagerOnly(); }
+function showScreen(id){ $$(".screen").forEach(s=>s.classList.remove("active")); const screen=$(id); if(screen) screen.classList.add("active"); const bottom=$("#bottomNav"); if(bottom) bottom.classList.toggle("hidden", true); updateManagerOnly(); }
 function goHome(){ showScreen("#homeScreen"); renderHome(); }
 function backToManager(){ renderManagerHome(); showScreen("#managerHomeScreen"); }
 function updateManagerOnly(){ $$(".manager-only").forEach(el=>el.style.display = canManage() ? "" : "none"); }
@@ -185,87 +185,105 @@ function renderManagerHome(){
   $("#mgrOpenIssues").textContent=issues.length;
   $("#mgrTasksDue").textContent=pendingTasks.length;
   $("#mgrClockedIn").textContent=shifts.length;
-  const doneBox=$("#mgrDoneToday");
-  if(doneBox) doneBox.textContent=completedToday.length;
+  $("#mgrDoneToday").textContent=completedToday.length;
 
   const issueBox=$("#mgrLiveIssues");
   if(issueBox){
     issueBox.innerHTML = issues.length ? issues.slice(0,5).map(i=>{
-      const cls = i.status==="In Progress" ? "warn" : "bad";
       return itemHTML(
         `${i.category}: ${i.subject || i.tank}`,
         `${i.tank} • ${i.staff} • ${i.time}`,
-        `${i.desc || ""}<div class="status-row"><span class="pill ${cls}">${i.status||"Open"}</span></div>`,
+        i.desc || "",
         "Issue",
         `<div class="item-actions">
           <button onclick="setIssueStatusQuick('${i.id}','In Progress')">Fixing</button>
           <button class="resolve" onclick="setIssueStatusQuick('${i.id}','Resolved')">Done</button>
-          <button onclick="addIssueNoteQuick('${i.id}')">Note</button>
-          <button class="delete" onclick="deleteRecord('issues','${i.id}',renderManagerHome)">Delete</button>
         </div>`
       );
-    }).join("") : `<div class="item">No open issues.</div>`;
+    }).join("") : `<div class="item">No problems reported.</div>`;
   }
 
   const pendingBox=$("#mgrPendingTasks");
   if(pendingBox){
     pendingBox.innerHTML = pendingTasks.length ? pendingTasks.slice(0,8).map(t=>{
-      const statusClass = isOverdue(t) ? "bad" : "warn";
       const due = t.dueDate ? `${t.dueDate} ${t.dueTime||""}` : "No due time";
       return itemHTML(
         t.title,
-        `${t.assignedTo} • Due ${due}`,
-        `${t.location?`Location: ${t.location}<br>`:""}${t.notes||""}<div class="status-row"><span class="pill ${statusClass}">${isOverdue(t)?"Overdue":"Pending"}</span><span class="pill">${t.priority}</span></div>`,
-        t.repeat,
+        `${t.assignedTo} • ${due}`,
+        `${t.location?`Location: ${t.location}<br>`:""}${t.notes||""}`,
+        isOverdue(t) ? "Overdue" : "Pending",
         `<div class="item-actions">
           <button class="resolve" onclick="managerCompleteTaskQuick('${t.id}')">Done</button>
           <button class="delete" onclick="deleteRecord('tasks','${t.id}',renderManagerHome)">Delete</button>
         </div>`
       );
-    }).join("") : `<div class="item">No pending tasks.</div>`;
+    }).join("") : `<div class="item">No tasks waiting.</div>`;
   }
 
-  const doneBoxList=$("#mgrCompletedTasks");
-  if(doneBoxList){
-    doneBoxList.innerHTML = completedToday.length ? completedToday.slice(0,8).map(t=>{
-      return itemHTML(
-        t.title,
-        `Done by ${t.completedBy || "staff"} • ${t.completedAt || ""}`,
-        `${t.assignedTo ? `Assigned to: ${t.assignedTo}<br>` : ""}${t.notes || ""}<div class="status-row"><span class="pill good">Completed</span></div>`,
-        "Done",
-        `<div class="item-actions"><button onclick="reopenTaskQuick('${t.id}')">Reopen</button></div>`
-      );
-    }).join("") : `<div class="item">No tasks completed today yet.</div>`;
+  const doneBox=$("#mgrCompletedTasks");
+  if(doneBox){
+    doneBox.innerHTML = completedToday.length ? completedToday.slice(0,8).map(t=>{
+      return itemHTML(t.title, `Done by ${t.completedBy || "staff"} • ${t.completedAt || ""}`, "", "Done",
+      `<div class="item-actions"><button onclick="reopenTaskQuick('${t.id}')">Reopen</button></div>`);
+    }).join("") : `<div class="item">Nothing completed yet today.</div>`;
   }
 
   const shiftBox=$("#mgrClockedInList");
   if(shiftBox){
-    shiftBox.innerHTML = shifts.length ? shifts.map(s=>{
-      return itemHTML(s.staff, `Clocked in: ${s.clockIn}`, "", "Live");
-    }).join("") : `<div class="item">No staff currently clocked in.</div>`;
+    shiftBox.innerHTML = shifts.length ? shifts.map(s=>itemHTML(s.staff, `Clocked in: ${s.clockIn}`, "", "In")).join("") : `<div class="item">No staff clocked in.</div>`;
   }
-
-  const alertBox=$("#mgrClockAlerts");
-  if(alertBox){
-    const events=store.get("clockEvents",[]);
-    alertBox.innerHTML = events.length ? events.slice(0,8).map(e=>{
-      const cls = e.type==="Clock In" ? "good" : "warn";
-      return itemHTML(
-        e.type,
-        `${e.staff} • ${e.time}`,
-        `<div class="status-row"><span class="pill ${cls}">${e.message}</span></div>`,
-        e.read ? "Seen" : "New",
-        `<div class="item-actions">${!e.read ? `<button onclick="markClockAlertRead('${e.id}')">Seen</button>` : ""}</div>`
-      );
-    }).join("") : `<div class="item">No clock alerts yet.</div>`;
-  }
-
-  renderManagerRotaPreview();
-  renderManagerHandoverPreview();
-  renderQuickHistory();
 }
 
 function populateQuickStaffSelect(){
+  const staff=store.get("staff",[]).filter(s=>s.active);
+  const select=$("#quickTaskStaff");
+  if(select) select.innerHTML=`<option>All Staff</option>` + staff.filter(s=>s.role!=="manager").map(s=>`<option>${s.name}</option>`).join("");
+  const date=$("#quickTaskDueDate");
+  if(date && !date.value) date.value=todayKey();
+}
+
+function setIssueStatusQuick(id,status){
+  const issues=store.get("issues",[]);
+  const issue=issues.find(i=>i.id===id);
+  if(issue){
+    issue.status=status;
+    issue.updatedBy=currentUser.name;
+    issue.updatedAt=now();
+    store.set("issues",issues);
+    renderManagerHome();
+    toast("Problem updated");
+  }
+}
+
+function managerCompleteTaskQuick(id){
+  const tasks=store.get("tasks",[]);
+  const t=tasks.find(x=>x.id===id);
+  if(t){
+    t.status="Done";
+    t.completedBy=currentUser.name;
+    t.completedAt=now();
+    t.completedDate=todayKey();
+    store.set("tasks",tasks);
+    renderManagerHome();
+    toast("Task done");
+  }
+}
+
+function reopenTaskQuick(id){
+  const tasks=store.get("tasks",[]);
+  const t=tasks.find(x=>x.id===id);
+  if(t){
+    t.status="Not Started";
+    delete t.completedBy;
+    delete t.completedAt;
+    delete t.completedDate;
+    store.set("tasks",tasks);
+    renderManagerHome();
+    toast("Task reopened");
+  }
+}
+
+function renderManagerTools(){
   const staff=store.get("staff",[]).filter(s=>s.active);
   const select=$("#quickTaskStaff");
   if(select) select.innerHTML=`<option>All Staff</option>` + staff.filter(s=>s.role!=="manager").map(s=>`<option>${s.name}</option>`).join("");
