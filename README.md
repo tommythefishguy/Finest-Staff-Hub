@@ -1,10 +1,14 @@
-# Finest Aquatics Staff Hub V4 Bulletproof
+# Finest Aquatics Staff Hub V4 Task Fix
 
-CSS and JavaScript are baked into index.html.
+Fixes:
+- Staff completed tasks now clearly show in Manager Area > Task Progress
+- Manager can see who completed a task and when
+- Completed and pending tasks are split into clear sections
+- Manager can reopen a completed task if needed
 
-Upload/replace ALL files in the repo root.
+Upload/replace all files in GitHub root.
 Open with:
-https://tommythefishguy.github.io/Finest-Staff-Hub/?v=4-fixed
+https://tommythefishguy.github.io/Finest-Staff-Hub/?v=4-taskfix
 
 Demo logins:
 - Staff PIN: 1234

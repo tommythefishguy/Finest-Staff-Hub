@@ -131,7 +131,7 @@ textarea{min-height:96px;resize:vertical}.pin-input{text-align:center;font-size:
       <p class="tiny">Demo manager PIN: 9999</p>
     </div>
   </div>
-  <p class="version">V4 Simple Mode</p>
+  <p class="version">V4 Task Fix</p>
 </section>
 
 <section id="homeScreen" class="screen">
@@ -380,7 +380,21 @@ function myTasks(){ return store.get("tasks",[]).filter(t => (t.assignedTo==="Al
 function renderStaffTaskMini(){ const tasks=myTasks(); $("#taskBadge").textContent=tasks.length; const list=$("#staffTaskMiniList"); if(!tasks.length){ list.innerHTML=`<div class="mini-task">No tasks assigned for today.</div>`; return; } list.innerHTML=tasks.slice(0,3).map(t=>`<div class="mini-task">${t.priority==="Urgent"?"⚠️":"✅"} ${t.title}</div>`).join(""); }
 function openStaffTasks(){ renderStaffTasks(); showScreen("#staffTasksScreen"); }
 function renderStaffTasks(){ const tasks=myTasks(); $("#staffTasksList").innerHTML = tasks.length ? tasks.map(t=>{ const due = t.dueDate ? `${t.dueDate} ${t.dueTime||""}` : "No due time"; return itemHTML(t.title, `${t.priority} • Due: ${due}`, `${t.location?`Location: ${t.location}<br>`:""}${t.notes||""}`, t.repeat, `<div class="item-actions"><button class="resolve" onclick="completeTask('${t.id}')">Mark Done</button></div>`); }).join("") : `<div class="item">No tasks assigned for today.</div>`; }
-function completeTask(id){ const tasks=store.get("tasks",[]); const t=tasks.find(x=>x.id===id); if(t){ t.status="Done"; t.completedBy=currentUser.name; t.completedAt=now(); t.completedDate=todayKey(); store.set("tasks",tasks); renderStaffTasks(); renderStaffTaskMini(); toast("Task completed"); } }
+function completeTask(id){
+  const tasks=store.get("tasks",[]);
+  const t=tasks.find(x=>x.id===id);
+  if(t){
+    t.status="Done";
+    t.completedBy=currentUser.name;
+    t.completedAt=now();
+    t.completedDate=todayKey();
+    t.completionNote = "Completed by " + currentUser.name + " at " + t.completedAt;
+    store.set("tasks",tasks);
+    renderStaffTasks();
+    renderStaffTaskMini();
+    toast("Task completed");
+  }
+}
 function openForm(type){ $("#formTitle").textContent = type==="Cleaning" ? "Clean Tank" : "Feed Tank"; $("#jobType").value=type; showScreen("#formScreen"); }
 function openProblemForm(){ showScreen("#problemScreen"); }
 $$(".back").forEach(b=>b.onclick=goHome);
@@ -399,12 +413,62 @@ function renderHandover(){ const hand=store.get("handover",[]); $("#handoverList
 function populateStaffSelects(){ const staff=store.get("staff",[]).filter(s=>s.active); const taskStaff=$("#taskStaff"); if(taskStaff) taskStaff.innerHTML=`<option>All Staff</option>` + staff.filter(s=>s.role!=="manager").map(s=>`<option>${s.name}</option>`).join(""); }
 function renderAssignTask(){ populateStaffSelects(); $("#taskDueDate").value=todayKey(); }
 $("#taskForm").onsubmit=(e)=>{ e.preventDefault(); const tasks=store.get("tasks",[]); tasks.unshift({id:uid(), assignedTo:$("#taskStaff").value, title:$("#taskTitle").value, location:$("#taskLocation").value, dueDate:$("#taskDueDate").value, dueTime:$("#taskDueTime").value, repeat:$("#taskRepeat").value, priority:$("#taskPriority").value, notes:$("#taskNotes").value, status:"Not Started", createdBy:currentUser.name, createdAt:now(), raw:Date.now()}); store.set("tasks",tasks); e.target.reset(); toast("Task sent"); renderManagerHome(); showScreen("#managerHomeScreen"); };
-function renderManagerTasks(){ const tasks=store.get("tasks",[]); $("#managerTasksList").innerHTML = tasks.length ? tasks.map(t=>{ const statusClass = t.status==="Done" ? "good" : isOverdue(t) ? "bad" : "warn"; const status = t.status==="Done" ? `Done by ${t.completedBy || ""}` : isOverdue(t) ? "Overdue" : "Pending"; const actions = `<div class="item-actions">${t.status!=="Done" ? `<button class="resolve" onclick="managerCompleteTask('${t.id}')">Mark Done</button>` : ""}<button class="delete" onclick="deleteRecord('tasks','${t.id}',renderManagerTasks)">Delete</button></div>`; return itemHTML(t.title, `Assigned to: ${t.assignedTo} • Due ${t.dueDate||"-"} ${t.dueTime||""}`, `${t.location?`Location: ${t.location}<br>`:""}${t.notes||""}<div class="status-row"><span class="pill ${statusClass}">${status}</span><span class="pill">${t.priority}</span></div>`, t.repeat, actions); }).join("") : `<div class="item">No tasks assigned yet.</div>`; }
+function renderManagerTasks(){
+  const tasks=store.get("tasks",[]);
+  if(!tasks.length){
+    $("#managerTasksList").innerHTML = `<div class="item">No tasks assigned yet.</div>`;
+    return;
+  }
+
+  const pending = tasks.filter(t=>t.status!=="Done");
+  const done = tasks.filter(t=>t.status==="Done");
+
+  const renderTask = (t) => {
+    const statusClass = t.status==="Done" ? "good" : isOverdue(t) ? "bad" : "warn";
+    const status = t.status==="Done"
+      ? `Completed by ${t.completedBy || "staff"}`
+      : isOverdue(t) ? "Overdue" : "Pending";
+
+    const assigned = `Assigned to: ${t.assignedTo} • Assigned by: ${t.createdBy || "Manager"} • Due ${t.dueDate||"-"} ${t.dueTime||""}`;
+    const body = `${t.location?`Location: ${t.location}<br>`:""}${t.notes||""}
+      ${t.completedAt?`<br><b>Completed at:</b> ${t.completedAt}`:""}
+      <div class="status-row"><span class="pill ${statusClass}">${status}</span><span class="pill">${t.priority}</span></div>`;
+
+    const actions = `<div class="item-actions">
+      ${t.status!=="Done" ? `<button class="resolve" onclick="managerCompleteTask('${t.id}')">Mark Done</button>` : `<button onclick="reopenTask('${t.id}')">Reopen</button>`}
+      <button class="delete" onclick="deleteRecord('tasks','${t.id}',renderManagerTasks)">Delete</button>
+    </div>`;
+
+    return itemHTML(t.title, assigned, body, t.status==="Done" ? "Completed" : t.repeat, actions);
+  };
+
+  $("#managerTasksList").innerHTML =
+    `<div class="item"><h3>Pending Tasks</h3><p>${pending.length} still to complete</p></div>` +
+    (pending.length ? pending.map(renderTask).join("") : `<div class="item">No pending tasks.</div>`) +
+    `<div class="item"><h3>Completed Tasks</h3><p>${done.length} completed</p></div>` +
+    (done.length ? done.map(renderTask).join("") : `<div class="item">No completed tasks yet.</div>`);
+}
+
 function managerCompleteTask(id){ const tasks=store.get("tasks",[]); const t=tasks.find(x=>x.id===id); if(t){ t.status="Done"; t.completedBy=currentUser.name; t.completedAt=now(); t.completedDate=todayKey(); store.set("tasks",tasks); renderManagerTasks(); toast("Task marked done"); } }
+
+function reopenTask(id){
+  const tasks=store.get("tasks",[]);
+  const t=tasks.find(x=>x.id===id);
+  if(t){
+    t.status="Not Started";
+    delete t.completedBy;
+    delete t.completedAt;
+    delete t.completedDate;
+    delete t.completionNote;
+    store.set("tasks",tasks);
+    renderManagerTasks();
+    toast("Task reopened");
+  }
+}
 function renderLivestockIssues(){ const issues=store.get("issues",[]); $("#livestockIssuesList").innerHTML = issues.length ? issues.map(i=>{ const statusClass = i.status==="Resolved" ? "good" : i.status==="In Progress" ? "warn" : "bad"; const actions = `<div class="item-actions"><button onclick="setIssueStatus('${i.id}','Open')">Open</button><button onclick="setIssueStatus('${i.id}','In Progress')">In Progress</button><button class="resolve" onclick="setIssueStatus('${i.id}','Resolved')">Resolved</button><button onclick="addIssueNote('${i.id}')">Note</button><button class="delete" onclick="deleteRecord('issues','${i.id}',renderLivestockIssues)">Delete</button></div>`; return itemHTML(`${i.category}: ${i.subject || i.tank}`, `${i.tank} • ${i.staff} • ${i.time}`, `Qty: ${i.qty||"-"}<br>${i.desc}${i.managerNote?`<br><b>Manager note:</b> ${i.managerNote}`:""}<div class="status-row"><span class="pill ${statusClass}">${i.status||"Open"}</span></div>`, i.category, actions); }).join("") : `<div class="item">No livestock issues logged.</div>`; }
 function setIssueStatus(id,status){ const issues=store.get("issues",[]); const issue=issues.find(i=>i.id===id); if(issue){ issue.status=status; issue.updatedBy=currentUser.name; issue.updatedAt=now(); store.set("issues",issues); renderLivestockIssues(); renderManagerHome(); toast("Issue updated"); } }
 function addIssueNote(id){ const note=prompt("Manager note:"); if(note===null) return; const issues=store.get("issues",[]); const issue=issues.find(i=>i.id===id); if(issue){ issue.managerNote=note; issue.updatedBy=currentUser.name; issue.updatedAt=now(); store.set("issues",issues); renderLivestockIssues(); toast("Note added"); } }
-function renderManagerHome(){ const issues=store.get("issues",[]).filter(i=>i.status!=="Resolved"); const tasks=store.get("tasks",[]).filter(t=>t.status!=="Done"); const shifts=store.get("shifts",[]).filter(s=>!s.clockOut); const logs=store.get("jobs",[]).filter(j=>j.date===todayKey()).length + store.get("tests",[]).filter(t=>t.date===todayKey()).length; $("#mgrOpenIssues").textContent=issues.length; $("#mgrTasksDue").textContent=tasks.length; $("#mgrClockedIn").textContent=shifts.length; $("#mgrLogsToday").textContent=logs; }
+function renderManagerHome(){ const issues=store.get("issues",[]).filter(i=>i.status!=="Resolved"); const tasks=store.get("tasks",[]).filter(t=>t.status!=="Done"); const completedToday=store.get("tasks",[]).filter(t=>t.status==="Done" && t.completedDate===todayKey()).length; const shifts=store.get("shifts",[]).filter(s=>!s.clockOut); const logs=store.get("jobs",[]).filter(j=>j.date===todayKey()).length + store.get("tests",[]).filter(t=>t.date===todayKey()).length; $("#mgrOpenIssues").textContent=issues.length; $("#mgrTasksDue").textContent=tasks.length; $("#mgrClockedIn").textContent=shifts.length; $("#mgrLogsToday").textContent=logs; }
 $("#staffForm").onsubmit=(e)=>{ e.preventDefault(); const staff=store.get("staff",[]); const name=$("#newStaffName").value.trim(), pin=$("#newStaffPin").value.trim(); if(!name || !pin) return toast("Name and PIN required"); if(staff.some(s=>s.pin===pin)) return toast("PIN already used"); staff.push({id:uid(), name, pin, role:$("#newStaffRole").value, active:true}); store.set("staff",staff); e.target.reset(); renderStaffSettings(); toast("Staff added"); };
 function toggleStaff(id){ const staff=store.get("staff",[]); const s=staff.find(x=>x.id===id); if(s){ s.active=!s.active; store.set("staff",staff); renderStaffSettings(); } }
 function editStaff(id){ const staff=store.get("staff",[]); const s=staff.find(x=>x.id===id); if(!s) return; const name=prompt("Staff name:", s.name); if(name===null) return; const pin=prompt("PIN:", s.pin); if(pin===null) return; if(staff.some(x=>x.id!==id && x.pin===pin)) return toast("PIN already used"); s.name=name.trim()||s.name; s.pin=pin.trim()||s.pin; store.set("staff",staff); renderStaffSettings(); toast("Staff updated"); }

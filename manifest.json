@@ -1,7 +1,7 @@
 {
-  "name": "Finest Aquatics Staff Hub V4",
+  "name": "Finest Aquatics Staff Hub V4 Task Fix",
   "short_name": "Finest Hub",
-  "start_url": "./index.html?v=4",
+  "start_url": "./index.html?v=4-taskfix",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#ff5a00",
