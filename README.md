@@ -1,18 +1,23 @@
-# Finest Aquatics Staff Hub Pro V3
-
-Demo logins:
-- Staff PIN: 1234
-- Manager PIN: 9999
-
-V3 adds:
-- Setup Hub
-- Tank Manager
-- Add one-off tasks for today
-- Add recurring daily tasks against saved tanks
-- Managed tank dropdowns
-- Mark one-off tasks complete
-- Task view includes recurring and daily tasks
-
-Upload all files except you may keep your existing assets folder if it is already correct.
-Open:
-https://tommythefishguy.github.io/Finest-Staff-Hub/?v=pro3
+{
+  "name": "Finest Aquatics Staff Hub V4",
+  "short_name": "Finest Hub",
+  "start_url": "./index.html?v=4",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#ff5a00",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
