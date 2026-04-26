@@ -1,23 +1,11 @@
-{
-  "name": "Finest Aquatics Staff Hub V4",
-  "short_name": "Finest Hub",
-  "start_url": "./index.html?v=4",
-  "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#ff5a00",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ]
-}
+# Finest Aquatics Staff Hub V4 Bulletproof
+
+CSS and JavaScript are baked into index.html.
+
+Upload/replace ALL files in the repo root.
+Open with:
+https://tommythefishguy.github.io/Finest-Staff-Hub/?v=4-fixed
+
+Demo logins:
+- Staff PIN: 1234
+- Manager PIN: 9999
